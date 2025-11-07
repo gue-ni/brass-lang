@@ -1,12 +1,27 @@
 #pragma once
 
+#include <cstddef>
 #include <vector>
+#include <string>
 
-class Bytecode
+
+class Object;
+
+enum Instruction : uint8_t
 {
-public:
-  Bytecode();
+  LOAD_CONST,
+  BINARY_ADD,
+  LOAD_VAR,
+  STORE_VAR,
+  DEBUG_PRINT,
+};
 
-private:
-  std::vector<std::vector<uint8_t>> mCode;
+using Instructions = std::vector<uint8_t>;
+using Literals     = std::vector<Object *>;
+
+struct CodeObject
+{
+  Literals literals;
+  Instructions instructions;
+  std::vector<std::string> variables;
 };
