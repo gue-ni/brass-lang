@@ -17,3 +17,10 @@ void CodeObject::emit_literal( Object value )
   literals.push_back( value );
   emit_instr( OP_LOAD_CONST, static_cast<uint8_t>( index ) );
 }
+
+uint8_t CodeObject::emit_name( const std::string & name )
+{
+  size_t index = literals.size();
+  names.push_back(name);
+  return static_cast<uint8_t>(index);
+}

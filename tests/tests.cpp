@@ -58,9 +58,10 @@ TEST_F( Unittest, test_002 )
 
   prog->stmts.push_back( stmt_2 );
 
-  CodeObject code = compile( prog );
-
   GarbageCollector gc;
+
+  CodeObject code = compile( prog, gc );
+
   VirtualMachine vm( out, err, gc );
 
   int r = vm.run( &code );
@@ -128,4 +129,19 @@ print(42);
   ASSERT_EQ( r, 0 );
   ASSERT_EQ( out.str(), "42" );
   ASSERT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, test_006 )
+{
+  const char * src = R"(
+fn meaning_of_life() {
+  return 42;
+}
+
+  )";
+
+  (void) eval( src, out, err );
+
+  ASSERT_EQ( err.str(), "42" );
+  ASSERT_EQ( out.str(), "" );
 }

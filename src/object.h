@@ -12,7 +12,7 @@ struct FunctionObject : public GarbageCollected
 {
   char name[32];
   uint8_t arity = 0;
-  CodeObject * code_object;
+  CodeObject  *code_object;
   FunctionObject( const char * fn_name, uint8_t arity, CodeObject * code_object );
 };
 

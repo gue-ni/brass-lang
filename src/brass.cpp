@@ -20,9 +20,10 @@ int eval( const char * src, std::ostream & out, std::ostream & err )
     return 1;
   }
 
-  CodeObject code = compile( result.node );
-
   GarbageCollector gc;
+
+  CodeObject code = compile( result.node, gc );
+
   VirtualMachine vm(out, err, gc);
 
   return vm.run( &code );

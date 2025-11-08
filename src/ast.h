@@ -45,6 +45,11 @@ struct Program : Stmt
 
 struct FnDecl : Stmt
 {
+  std::string name;
+  std::vector<std::string> args;
+  Stmt* body;
+  FnDecl(const std::string& name, const std::vector<std::string>& args, Stmt* body);
+  void compile( Compiler & compiler ) override;
 };
 
 struct IfStmt : Stmt
@@ -68,5 +73,12 @@ struct DebugPrint : Stmt
 {
   Expr * expr;
   DebugPrint( Expr * expr );
+  void compile( Compiler & compiler ) override;
+};
+
+struct Return : Stmt
+{
+  Expr * expr;
+  Return( Expr * expr );
   void compile( Compiler & compiler ) override;
 };

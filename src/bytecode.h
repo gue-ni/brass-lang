@@ -28,4 +28,5 @@ struct CodeObject
   void emit_instr( Instruction );
   void emit_instr( Instruction, uint8_t );
   void emit_literal( Object );
+  uint8_t emit_name(const std::string& name);
 };

@@ -68,3 +68,33 @@ void WhileStmt::compile( Compiler & compiler )
 {
   // TODO
 }
+
+FnDecl::FnDecl( const std::string & name, const std::vector<std::string> & args, Stmt * body )
+    : name( name )
+    , args( args )
+    , body( body )
+{
+}
+
+void FnDecl::compile( Compiler & compiler )
+{
+  // TODO
+
+  CodeObject * code_object = nullptr;
+
+  FunctionObject * fn = compiler.gc.alloc<FunctionObject>( name.c_str(), ( uint8_t ) args.size(), code_object );
+
+  auto var = compiler.code.emit_name( name );
+  compiler.code.emit_literal( Object::Function( fn ) );
+  compiler.code.emit_instr( OP_STORE_VAR, var );
+}
+
+Return::Return( Expr * expr )
+    : expr( expr )
+{
+}
+
+void Return::compile( Compiler & compiler )
+{
+  // TODO
+}

@@ -30,7 +30,7 @@ template <typename T>
 Result<T> make_error( const std::string & error )
 {
   Result<T> r;
-  r.error = "Parser Error: " + error;
+  r.error = error;
   return r;
 }
 
