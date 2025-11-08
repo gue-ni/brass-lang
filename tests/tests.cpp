@@ -116,3 +116,16 @@ print(x);
   ASSERT_EQ( out.str(), "5" );
   ASSERT_EQ( err.str(), "" );
 }
+
+TEST_F( Unittest, test_005 )
+{
+  const char * src = R"(
+print(42);
+  )";
+
+  int r = eval( src, out, err );
+
+  ASSERT_EQ( r, 0 );
+  ASSERT_EQ( out.str(), "42" );
+  ASSERT_EQ( err.str(), "" );
+}

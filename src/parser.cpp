@@ -20,8 +20,75 @@ const Token & Parser::previous()
 
 Result<Program> Parser::parse_program()
 {
-  Program * ast = m_arena.alloc<Program>();
-  return make_result( ast );
+  Program * prog = m_arena.alloc<Program>();
+
+  do
+  {
+    auto result = parse_stmt();
+    if( !result.ok() )
+    {
+      return make_error<Program>( result.error );
+    }
+
+    prog->stmts.push_back( result.node );
+  } while( !is_finished() );
+
+  return make_result( prog );
+}
+
+Result<Stmt> Parser::parse_stmt()
+{
+  Stmt * stmt = nullptr;
+  if( match( KW_PRINT ) )
+  {
+    if( !match( LPAREN ) )
+    {
+      return make_error<Stmt>( "Expected '('" );
+    }
+
+    Result<Expr> expr = parse_expr();
+    if( !expr.ok() )
+    {
+      return make_error<Stmt>( expr.error );
+    }
+
+    if( !match( RPAREN ) )
+    {
+      return make_error<Stmt>( "Expected ')'" );
+    }
+
+    stmt = m_arena.alloc<DebugPrint>( expr.node );
+  }
+  else if( match( KW_FN ) )
+  {
+    // TODO
+  }
+  else if( match( KW_RETURN ) )
+  {
+    // TODO
+  }
+
+  if( !match( SEMICOLON ) )
+  {
+    return make_error<Stmt>( "Expected ';'" );
+  }
+
+  return make_result( stmt );
+}
+
+Result<Expr> Parser::parse_expr()
+{
+  if( match( NUMBER ) )
+  {
+    const Token & prev = previous();
+    int value          = std::stoi( prev.lexeme );
+    Literal * literal  = m_arena.alloc<Literal>( Object::Integer( value ) );
+    return make_result<Expr>( literal );
+  }
+  else
+  {
+    return make_error<Expr>( "Not Implemented" );
+  }
 }
 
 const Token & Parser::peek()

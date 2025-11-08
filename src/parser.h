@@ -12,7 +12,7 @@ struct Result
 {
   std::string error;
   NodeType * node;
-  bool is_ok() const
+  bool ok() const
   {
     return error.empty() && node != nullptr;
   }
@@ -46,6 +46,8 @@ private:
   ArenaAllocator & m_arena;
 
   Result<Program> parse_program();
+  Result<Stmt> parse_stmt();
+  Result<Expr> parse_expr();
 
   const Token & peek();
   const Token & previous();

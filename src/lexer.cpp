@@ -124,24 +124,13 @@ void Lexer::handle_identifier()
 {
   static const std::map<std::string, TokenType> keywords = {
       // clang-format off
-      { "void", KW_VOID },
-      { "int", KW_INT },
-      { "char", KW_CHAR },
-      { "short", KW_SHORT },
-      { "long", KW_LONG },
-      { "float", KW_FLOAT },
-      { "double", KW_DOUBLE },
-      { "signed", KW_SIGNED },
-      { "unsigned", KW_UNSIGNED },
-      { "const", KW_CONST },
-      { "volatitle", KW_VOLATILE },
-      { "restrict", KW_RESTRICT },
-      { "static", KW_STATIC },
+      { "fn", KW_FN },
       { "if", KW_IF },
       { "else", KW_ELSE },
       { "for", KW_FOR },
       { "while", KW_WHILE },
       { "return", KW_RETURN },
+      { "print", KW_PRINT },
       // clang-format on
   };
 
@@ -181,6 +170,9 @@ void Lexer::run()
       case ';' :
         push_token( Token( SEMICOLON, c ) );
         break;
+      case ',' :
+          push_token(Token(COMMA, c));
+          break;
       case '(' :
         push_token( Token( LPAREN, c ) );
         break;

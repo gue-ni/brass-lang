@@ -11,6 +11,7 @@ enum TokenType : uint
   LBRACE,
   RBRACE,
   SEMICOLON,
+  COMMA,
   TILDE,
   MINUS,
   MINUS_MINUS,
@@ -21,22 +22,8 @@ enum TokenType : uint
   EQUAL,
   EQUAL_EQUAL,
 
-  // type specifiers
-  KW_VOID,
-  KW_INT,
-  KW_CHAR,
-  KW_SHORT,
-  KW_LONG,
-  KW_FLOAT,
-  KW_DOUBLE,
-  KW_SIGNED,
-  KW_UNSIGNED,
-
-  // type qualifiers
-  KW_CONST,
-  KW_VOLATILE,
-  KW_RESTRICT,
-  KW_STATIC,
+  KW_FN,
+  KW_PRINT,
 
   // control flow
   KW_IF,
