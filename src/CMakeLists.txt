@@ -1,5 +1,5 @@
-set(SRC "vm.cpp" "parser.cpp" "lexer.cpp" "ast.cpp" "gc.cpp" "object.cpp" "bytecode.cpp" "brass.cpp")
-set(INC "vm.h" "parser.h" "lexer.h" "ast.h" "gc.h" "object.h" "bytecode.h" "brass.h")
+set(SRC "vm.cpp" "parser.cpp" "lexer.cpp" "ast.cpp" "gc.cpp" "object.cpp" "bytecode.cpp" "brass.cpp" "utils.cpp" "compiler.cpp")
+set(INC "vm.h" "parser.h" "lexer.h" "ast.h" "gc.h" "object.h" "bytecode.h" "brass.h" "utils.h" "compiler.h")
 
 add_library(brass_lang STATIC ${SRC} ${INC})
 
