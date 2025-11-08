@@ -4,7 +4,6 @@
 #include <string>
 #include <vector>
 
-//#include "object.h"
 class Object;
 
 enum Instruction : uint8_t
@@ -29,5 +28,5 @@ struct CodeObject
   void emit_instr( Instruction );
   void emit_instr( Instruction, uint8_t );
   void emit_literal( Object );
-  uint8_t emit_name(const std::string& name);
+  uint8_t emit_name( const std::string & name );
 };

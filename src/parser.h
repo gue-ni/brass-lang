@@ -47,6 +47,7 @@ private:
 
   Result<Program> parse_program();
   Result<Stmt> parse_stmt();
+  Result<Block> parse_block();
   Result<Expr> parse_expr();
   Result<Expr> parse_primary();
   Result<Expr> parse_term();

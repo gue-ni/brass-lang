@@ -2,10 +2,8 @@
 
 #include <string>
 
-#include "gc.h"
 #include "bytecode.h"
-
-//struct CodeObject;
+#include "gc.h"
 
 class Object;
 
@@ -13,8 +11,8 @@ struct FunctionObject : public GarbageCollected
 {
   char name[32];
   uint8_t arity = 0;
-  CodeObject  code_object;
-  FunctionObject( const char * fn_name, uint8_t arity);
+  CodeObject code_object;
+  FunctionObject( const char * fn_name, uint8_t arity );
 };
 
 struct ListObject : public GarbageCollected

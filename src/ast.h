@@ -53,6 +53,12 @@ struct Program : Stmt
   void compile( Compiler & compiler ) override;
 };
 
+struct Block : Stmt
+{
+  std::vector<Stmt *> stmts;
+  void compile( Compiler & compiler ) override;
+};
+
 struct FnDecl : Stmt
 {
   std::string name;

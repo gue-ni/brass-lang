@@ -132,3 +132,11 @@ void FnCall::compile( Compiler & compiler )
   callee->compile( compiler );
   compiler.code->emit_instr( OP_CALL_FUNCTION );
 }
+
+void Block::compile( Compiler & compiler )
+{
+  for (Stmt* stmt : stmts)
+  {
+    stmt->compile(compiler);
+  }
+}

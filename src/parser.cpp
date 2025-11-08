@@ -83,7 +83,7 @@ Result<Stmt> Parser::parse_stmt()
       return make_error<Stmt>( "Expected '{'" );
     }
 
-    auto body = parse_stmt();
+    auto body = parse_block();
     if( !body.ok() )
     {
       return make_error<Stmt>( body.error );
@@ -119,6 +119,29 @@ Result<Stmt> Parser::parse_stmt()
   }
 
   return make_result( stmt );
+}
+
+Result<Block> Parser::parse_block()
+{
+  Block * block = m_arena.alloc<Block>();
+  do
+  {
+
+    if( peek().type == RBRACE )
+    {
+      break;
+    }
+
+    auto result = parse_stmt();
+    if( !result.ok() )
+    {
+      return make_error<Block>( result.error );
+    }
+
+    block->stmts.push_back( result.node );
+  } while( !is_finished() );
+
+  return make_result( block );
 }
 
 Result<Expr> Parser::parse_expr()
