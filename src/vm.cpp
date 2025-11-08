@@ -20,23 +20,23 @@ int VirtualMachine::run( CodeObject * co )
     {
       case OP_LOAD_CONST :
         {
-          Value constant = current_frame().code_object->literals[arg];
+          Object constant = current_frame().code_object->literals[arg];
           push( constant );
           break;
         }
       case OP_BINARY_ADD :
         {
-          Value lhs    = pop();
-          Value rhs    = pop();
-          int a        = lhs.integer;
-          int b        = rhs.integer;
-          Value result = Value( a + b );
+          Object lhs    = pop();
+          Object rhs    = pop();
+          int a         = lhs.integer;
+          int b         = rhs.integer;
+          Object result = Object::Integer( a + b );
           push( result );
           break;
         }
       case OP_DEBUG_PRINT :
         {
-          Value obj = pop();
+          Object obj = pop();
           m_out << obj.integer;
           break;
         }
@@ -48,14 +48,14 @@ int VirtualMachine::run( CodeObject * co )
   return 0;
 }
 
-void VirtualMachine::push( Value obj )
+void VirtualMachine::push( Object obj )
 {
   current_frame().stack.push( obj );
 }
 
-Value VirtualMachine::pop()
+Object VirtualMachine::pop()
 {
-  Value obj = current_frame().stack.top();
+  Object obj = current_frame().stack.top();
   current_frame().stack.pop();
   return obj;
 }

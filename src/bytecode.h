@@ -20,9 +20,9 @@ enum Instruction : uint8_t
 
 struct CodeObject
 {
-  std::vector<Value> literals;
+  std::vector<Object> literals;
   std::vector<uint8_t> instructions;
   std::vector<std::string> variables;
   void emit_instr( Instruction );
-  void emit_literal( Value );
+  void emit_literal( Object );
 };

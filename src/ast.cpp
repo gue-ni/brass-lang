@@ -4,7 +4,7 @@ void AstNode::compile( Compiler & )
 {
 }
 
-Literal::Literal( Value value )
+Literal::Literal( Object value )
     : value( value )
 {
 }

@@ -20,8 +20,8 @@ struct Stmt : AstNode
 
 struct Literal : Expr
 {
-  Value value;
-  Literal( Value value );
+  Object value;
+  Literal( Object value );
   void compile( Compiler & ) override;
 };
 

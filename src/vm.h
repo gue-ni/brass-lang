@@ -9,7 +9,7 @@ struct Frame
 {
   CodeObject * code_object;
   std::vector<uint8_t>::const_iterator ip;
-  std::stack<Value> stack;
+  std::stack<Object> stack;
 
   Frame( CodeObject * co )
       : code_object( co )
@@ -31,8 +31,8 @@ private:
   GarbageCollector & m_gc;
   std::stack<Frame> m_frames;
 
-  void push( Value );
-  Value pop();
+  void push( Object );
+  Object pop();
   Frame & current_frame();
   std::pair<Instruction, uint16_t> next_instr();
 };

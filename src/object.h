@@ -6,11 +6,6 @@
 
 struct CodeObject;
 
-
-class Object : public GarbageCollected
-{
-};
-
 struct Function : public GarbageCollected
 {
   char name[32];
@@ -18,7 +13,7 @@ struct Function : public GarbageCollected
   CodeObject * code_object;
 };
 
-class Value
+class Object
 {
 public:
   enum Type
@@ -27,10 +22,12 @@ public:
     BOOLEAN,
     INTEGER,
     STRING,
-    OBJECT
   };
 
-  Value( int value );
+  Object();
+  static Object Boolean( bool );
+  static Object Integer( int );
+  static Object String( const char * );
 
   Type type;
   union
@@ -38,6 +35,5 @@ public:
     bool boolean;
     int integer;
     char * string;
-    Object * object;
   };
 };

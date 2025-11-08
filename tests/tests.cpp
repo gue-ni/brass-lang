@@ -29,8 +29,8 @@ print(1 + 2);
 TEST_F( Unittest, test_001 )
 {
   CodeObject code;
-  code.emit_literal( Value( 2 ) );
-  code.emit_literal( Value( 3 ) );
+  code.emit_literal( Object::Integer( 2 ) );
+  code.emit_literal( Object::Integer( 3 ) );
   code.emit_instr( OP_BINARY_ADD );
   code.emit_instr( OP_DEBUG_PRINT );
 
@@ -49,12 +49,12 @@ TEST_F( Unittest, test_002 )
   ArenaAllocator allocator( 1024 );
   Program * prog = allocator.alloc<Program>();
 
-  Stmt * stmt_1 = allocator.alloc<DebugPrint>( allocator.alloc<Literal>( Value( 42 ) ) );
+  Stmt * stmt_1 = allocator.alloc<DebugPrint>( allocator.alloc<Literal>( Object::Integer( 42 ) ) );
 
   prog->stmts.push_back( stmt_1 );
 
-  Stmt * stmt_2 = allocator.alloc<DebugPrint>(
-      allocator.alloc<Binary>( allocator.alloc<Literal>( Value( 2 ) ), allocator.alloc<Literal>( Value( 3 ) ) ) );
+  Stmt * stmt_2 = allocator.alloc<DebugPrint>( allocator.alloc<Binary>(
+      allocator.alloc<Literal>( Object::Integer( 2 ) ), allocator.alloc<Literal>( Object::Integer( 3 ) ) ) );
 
   prog->stmts.push_back( stmt_2 );
 
@@ -68,5 +68,4 @@ TEST_F( Unittest, test_002 )
   ASSERT_EQ( r, 0 );
   ASSERT_EQ( out.str(), "425" );
   ASSERT_EQ( err.str(), "" );
-
 }

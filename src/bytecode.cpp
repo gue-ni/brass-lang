@@ -5,7 +5,7 @@ void CodeObject::emit_instr( Instruction instr )
   instructions.push_back( instr );
 }
 
-void CodeObject::emit_literal( Value value )
+void CodeObject::emit_literal( Object value )
 {
   size_t index = literals.size();
   literals.push_back( value );
