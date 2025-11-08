@@ -1,5 +1,6 @@
 #include "vm.h"
 #include "object.h"
+#include <cassert>
 
 VirtualMachine::VirtualMachine( std::ostream & out, std::ostream & err, GarbageCollector & gc )
     : m_out( out )
@@ -12,19 +13,41 @@ int VirtualMachine::run( CodeObject * co )
 {
   m_frames.push( Frame( co ) );
 
-  while( !m_exit && current_frame().ip != current_frame().code_object->instructions.end() )
+  while( !m_exit && ( current_frame().ip != current_frame().code_object->instructions.end() ) )
   {
     auto [instr, arg] = next_instr();
-
     switch( instr )
     {
       case OP_LOAD_CONST :
         {
-          Object constant = current_frame().code_object->literals[arg];
-          push( constant );
+          Object obj = current_frame().code_object->literals[arg];
+          push( obj );
           break;
         }
-      case OP_BINARY_ADD :
+      case OP_LOAD_VAR :
+        {
+          std::string var = current_frame().code_object->names[arg];
+          auto it         = m_globals.find( var );
+          if( it != m_globals.end() )
+          {
+            push( it->second );
+          }
+          break;
+        }
+      case OP_STORE_VAR :
+        {
+          std::string var = current_frame().code_object->names[arg];
+          Object obj      = pop();
+          m_globals[var]  = obj;
+          break;
+        }
+      case OP_LOAD_FAST :
+        {
+          Object obj = m_stack[current_frame().bp + arg];
+          push( obj );
+          break;
+        }
+      case OP_ADD :
         {
           Object lhs    = pop();
           Object rhs    = pop();
@@ -40,6 +63,29 @@ int VirtualMachine::run( CodeObject * co )
           m_out << obj.integer;
           break;
         }
+      case OP_MAKE_FUNCTION :
+        {
+          // TODO: setup environment
+          break;
+        }
+      case OP_CALL_FUNCTION :
+        {
+          Object obj = pop();
+          assert( obj.type == Object::Type::FUNCTION );
+          FunctionObject * fn = obj.function;
+          size_t bp           = m_stack.size() - fn->arity;
+          m_frames.push( Frame( fn->code_object, bp ) );
+          break;
+        }
+      case OP_RETURN :
+        {
+          Object return_value = pop();
+          Frame& frame = m_frames.top();
+          m_stack.resize(frame.bp);
+          m_frames.pop();
+          push(return_value);
+          break;
+        }
       default :
         m_exit = true;
         break;
@@ -50,13 +96,13 @@ int VirtualMachine::run( CodeObject * co )
 
 void VirtualMachine::push( Object obj )
 {
-  current_frame().stack.push( obj );
+  m_stack.push_back( obj );
 }
 
 Object VirtualMachine::pop()
 {
-  Object obj = current_frame().stack.top();
-  current_frame().stack.pop();
+  Object obj = m_stack.back();
+  m_stack.pop_back();
   return obj;
 }
 
@@ -73,12 +119,11 @@ std::pair<Instruction, uint16_t> VirtualMachine::next_instr()
     case OP_LOAD_CONST :
     case OP_LOAD_VAR :
     case OP_STORE_VAR :
+    case OP_LOAD_FAST :
       {
         uint8_t arg = *( current_frame().ip++ );
         return std::make_pair( instr, ( uint16_t ) arg );
       }
-    case OP_DEBUG_PRINT :
-    case OP_BINARY_ADD :
     default :
       return std::make_pair( instr, 0xffff );
   }

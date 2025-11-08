@@ -32,7 +32,7 @@ void Binary::compile( Compiler & compiler )
 {
   rhs->compile( compiler );
   lhs->compile( compiler );
-  compiler.code.emit_instr( OP_BINARY_ADD );
+  compiler.code.emit_instr( OP_ADD );
 }
 
 DebugPrint::DebugPrint( Expr * expr )

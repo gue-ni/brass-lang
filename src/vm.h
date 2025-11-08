@@ -2,18 +2,22 @@
 
 #include "bytecode.h"
 #include "gc.h"
+
 #include <ostream>
 #include <stack>
+#include <map>
 
 struct Frame
 {
   CodeObject * code_object;
   std::vector<uint8_t>::const_iterator ip;
-  std::stack<Object> stack;
+  //std::stack<Object> stack;
+  size_t bp;
 
-  Frame( CodeObject * co )
+  Frame( CodeObject * co, size_t bp = 0 )
       : code_object( co )
       , ip( code_object->instructions.begin() )
+      , bp(bp)
   {
   }
 };
@@ -30,6 +34,8 @@ private:
   std::ostream & m_err;
   GarbageCollector & m_gc;
   std::stack<Frame> m_frames;
+  std::vector<Object> m_stack;
+  std::map<std::string, Object> m_globals;
 
   void push( Object );
   Object pop();

@@ -31,7 +31,7 @@ TEST_F( Unittest, test_001 )
   CodeObject code;
   code.emit_literal( Object::Integer( 2 ) );
   code.emit_literal( Object::Integer( 3 ) );
-  code.emit_instr( OP_BINARY_ADD );
+  code.emit_instr( OP_ADD );
   code.emit_instr( OP_DEBUG_PRINT );
 
   GarbageCollector gc;
@@ -67,5 +67,52 @@ TEST_F( Unittest, test_002 )
 
   ASSERT_EQ( r, 0 );
   ASSERT_EQ( out.str(), "425" );
+  ASSERT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, test_003 )
+{
+  const char * src = R"(
+fn add(a, b) {
+  return a + b;
+}
+
+x = add(2, 3);
+
+print(x);
+)";
+
+  GarbageCollector gc;
+
+  CodeObject func;
+  func.emit_instr( OP_LOAD_FAST, 0 ); // a
+  func.emit_instr( OP_LOAD_FAST, 1 ); // b
+  func.emit_instr( OP_ADD );
+  func.emit_instr( OP_RETURN );
+
+  FunctionObject * fn = gc.alloc<FunctionObject>( "add", 2, &func );
+
+  CodeObject code;
+  code.names.push_back( "add" );
+  code.names.push_back( "x" );
+  code.emit_literal( Object::Function( fn ) );
+  code.emit_instr( OP_MAKE_FUNCTION );
+  code.emit_instr( OP_STORE_VAR, 0 );
+
+  code.emit_literal( Object::Integer( 2 ) );
+  code.emit_literal( Object::Integer( 3 ) );
+  code.emit_instr( OP_LOAD_VAR, 0 ); // add
+  code.emit_instr( OP_CALL_FUNCTION );
+  code.emit_instr( OP_STORE_VAR, 1 ); // x
+
+  code.emit_instr( OP_LOAD_VAR, 1 ); // x
+  code.emit_instr( OP_DEBUG_PRINT );
+
+  VirtualMachine vm( out, err, gc );
+
+  int r = vm.run( &code );
+
+  ASSERT_EQ( r, 0 );
+  ASSERT_EQ( out.str(), "5" );
   ASSERT_EQ( err.str(), "" );
 }

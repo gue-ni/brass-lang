@@ -37,3 +37,18 @@ Object Object::String( const char * value )
   obj.string = STRDUP( value );
   return obj;
 }
+
+Object Object::Function( FunctionObject * fn )
+{
+  Object obj;
+  obj.type     = FUNCTION;
+  obj.function = fn;
+  return obj;
+}
+
+FunctionObject::FunctionObject( const char * fn_name, uint8_t arity, CodeObject * code_object )
+    : arity( arity )
+    , code_object( code_object )
+{
+  strncpy( name, fn_name, sizeof( name ) );
+}
