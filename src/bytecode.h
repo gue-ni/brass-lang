@@ -1,27 +1,27 @@
 #pragma once
 
 #include <cstddef>
-#include <vector>
 #include <string>
+#include <vector>
 
-
-class Object;
+#include "object.h"
 
 enum Instruction : uint8_t
 {
-  LOAD_CONST,
-  BINARY_ADD,
-  LOAD_VAR,
-  STORE_VAR,
-  DEBUG_PRINT,
+  OP_LOAD_CONST,
+  OP_BINARY_ADD,
+  OP_DEBUG_PRINT,
+  OP_LOAD_VAR,
+  OP_STORE_VAR,
+  OP_CALL_FUNCTION,
+  OP_CALL_METHOD,
 };
-
-using Instructions = std::vector<uint8_t>;
-using Literals     = std::vector<Object *>;
 
 struct CodeObject
 {
-  Literals literals;
-  Instructions instructions;
+  std::vector<Value> literals;
+  std::vector<uint8_t> instructions;
   std::vector<std::string> variables;
+  void emit_instr(Instruction);
+  void emit_literal(Value);
 };

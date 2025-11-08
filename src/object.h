@@ -4,6 +4,10 @@
 
 class Object : public GarbageCollected
 {
+};
+
+class Value
+{
 public:
   enum Type
   {
@@ -11,9 +15,10 @@ public:
     BOOLEAN,
     INTEGER,
     STRING,
+    OBJECT
   };
 
-  Object( int value );
+  Value( int value );
 
   Type type;
   union
@@ -21,5 +26,6 @@ public:
     bool boolean;
     int integer;
     char * string;
+    Object * object;
   };
 };

@@ -1,7 +1,7 @@
 
 #include "object.h"
 
-Object::Object( int value )
+Value::Value( int value )
     : type( INTEGER )
     , integer( value )
 {

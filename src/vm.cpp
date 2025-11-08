@@ -18,26 +18,26 @@ int VirtualMachine::run( CodeObject * co )
 
     switch( instr )
     {
-      case LOAD_CONST :
+      case OP_LOAD_CONST :
         {
-          Object * constant = current_frame().code_object->literals[arg];
+          Value constant = current_frame().code_object->literals[arg];
           push( constant );
           break;
         }
-      case BINARY_ADD :
+      case OP_BINARY_ADD :
         {
-          Object * lhs    = pop();
-          Object * rhs    = pop();
-          int a           = lhs->integer;
-          int b           = rhs->integer;
-          Object * result = m_gc.alloc<Object>( a + b );
+          Value lhs    = pop();
+          Value rhs    = pop();
+          int a        = lhs.integer;
+          int b        = rhs.integer;
+          Value result = Value( a + b );
           push( result );
           break;
         }
-      case DEBUG_PRINT :
+      case OP_DEBUG_PRINT :
         {
-          Object * obj = pop();
-          m_out << obj->integer;
+          Value obj = pop();
+          m_out << obj.integer;
           break;
         }
       default :
@@ -48,14 +48,14 @@ int VirtualMachine::run( CodeObject * co )
   return 0;
 }
 
-void VirtualMachine::push( Object * obj )
+void VirtualMachine::push( Value obj )
 {
   current_frame().stack.push( obj );
 }
 
-Object * VirtualMachine::pop()
+Value VirtualMachine::pop()
 {
-  Object * obj = current_frame().stack.top();
+  Value obj = current_frame().stack.top();
   current_frame().stack.pop();
   return obj;
 }
@@ -70,15 +70,15 @@ std::pair<Instruction, uint16_t> VirtualMachine::next_instr()
   Instruction instr = static_cast<Instruction>( *( current_frame().ip++ ) );
   switch( instr )
   {
-    case LOAD_CONST :
-    case LOAD_VAR :
-    case STORE_VAR :
+    case OP_LOAD_CONST :
+    case OP_LOAD_VAR :
+    case OP_STORE_VAR :
       {
         uint8_t arg = *( current_frame().ip++ );
         return std::make_pair( instr, ( uint16_t ) arg );
       }
-    case DEBUG_PRINT :
-    case BINARY_ADD :
+    case OP_DEBUG_PRINT :
+    case OP_BINARY_ADD :
     default :
       return std::make_pair( instr, 0xffff );
   }
