@@ -109,6 +109,24 @@ Result<Stmt> Parser::parse_stmt()
 
     stmt = m_arena.alloc<Return>( expr.node );
   }
+  else if( match( KW_VAR ) )
+  {
+    if( !match( IDENTIFIER ) )
+    {
+      return make_error<Stmt>( "Expected identifier" );
+    }
+
+    std::string name = previous().lexeme;
+
+    if( !match( EQUAL ) )
+    {
+      return make_error<Stmt>( "Expected '='" );
+    }
+
+    auto expr = parse_expr();
+
+    stmt = m_arena.alloc<VariableDecl>( name, expr.node );
+  }
 
   if( !match( SEMICOLON ) )
   {
@@ -163,7 +181,7 @@ Result<Expr> Parser::parse_primary()
 
     if( !match( LPAREN ) )
     {
-      return make_error<Expr>( "Expected '('" );
+      return make_result<Expr>( var );
     }
 
     std::vector<Expr *> args;

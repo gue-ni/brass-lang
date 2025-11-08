@@ -135,8 +135,22 @@ void FnCall::compile( Compiler & compiler )
 
 void Block::compile( Compiler & compiler )
 {
-  for (Stmt* stmt : stmts)
+  for( Stmt * stmt : stmts )
   {
-    stmt->compile(compiler);
+    stmt->compile( compiler );
   }
+}
+
+VariableDecl::VariableDecl( const std::string & name, Expr * expr )
+    : name( name )
+    , expr( expr )
+{
+}
+
+void VariableDecl::compile( Compiler & compiler )
+{
+  expr->compile( compiler );
+
+  auto index = compiler.code->emit_name( name );
+  compiler.code->emit_instr( OP_STORE_VAR, index );
 }

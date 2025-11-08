@@ -130,7 +130,7 @@ print(42);
   ASSERT_EQ( err.str(), "" );
 }
 
-TEST_F( Unittest, test_function_declaration )
+TEST_F( Unittest, test_fn_decl )
 {
   const char * src = R"(
 fn meaning_of_life() {
@@ -144,4 +144,19 @@ print(meaning_of_life());
 
   ASSERT_EQ( out.str(), "42" );
   ASSERT_EQ( err.str(), "" );
+}
+
+TEST_F(Unittest, test_var_decl) {
+  const char * src = R"(
+var x = 2 + 3;
+
+print(x);
+  )";
+
+  ( void ) eval( src, out, err );
+
+  ASSERT_EQ( out.str(), "5" );
+  ASSERT_EQ( err.str(), "" );
+
+
 }

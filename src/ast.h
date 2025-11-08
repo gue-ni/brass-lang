@@ -35,15 +35,24 @@ struct Binary : Expr
 
 struct FnCall : Expr
 {
-  Expr* callee;
-  std::vector<Expr*> args;
-  FnCall(Expr* callee, const std::vector<Expr*>& args);
+  Expr * callee;
+  std::vector<Expr *> args;
+  FnCall( Expr * callee, const std::vector<Expr *> & args );
   void compile( Compiler & compiler ) override;
 };
 
-struct Variable : Expr {
+struct Variable : Expr
+{
   std::string name;
-  Variable(const std::string& name);
+  Variable( const std::string & name );
+  void compile( Compiler & compiler ) override;
+};
+
+struct VariableDecl : Stmt
+{
+  std::string name;
+  Expr * expr;
+  VariableDecl( const std::string & name, Expr * expr );
   void compile( Compiler & compiler ) override;
 };
 
@@ -63,8 +72,8 @@ struct FnDecl : Stmt
 {
   std::string name;
   std::vector<std::string> args;
-  Stmt* body;
-  FnDecl(const std::string& name, const std::vector<std::string>& args, Stmt* body);
+  Stmt * body;
+  FnDecl( const std::string & name, const std::vector<std::string> & args, Stmt * body );
   void compile( Compiler & compiler ) override;
 };
 

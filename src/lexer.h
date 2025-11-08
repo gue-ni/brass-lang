@@ -31,6 +31,7 @@ enum TokenType : uint
   KW_FOR,
   KW_WHILE,
   KW_RETURN,
+  KW_VAR,
 
   // literals
   NUMBER,

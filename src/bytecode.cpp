@@ -21,7 +21,7 @@ void CodeObject::emit_literal( Object value )
 
 uint8_t CodeObject::emit_name( const std::string & name )
 {
-  size_t index = literals.size();
+  size_t index = names.size();
   names.push_back(name);
   return static_cast<uint8_t>(index);
 }
