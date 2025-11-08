@@ -19,7 +19,7 @@ TEST_F( Unittest, test_000 )
 print(1 + 2);
   )";
   int r            = eval( src, out, err );
-  ASSERT_EQ( r, 1 );
+  ASSERT_EQ( r, 0 );
   ASSERT_EQ( out.str(), "" );
   ASSERT_EQ( err.str(), "" );
 }
@@ -30,21 +30,13 @@ TEST_F( Unittest, test_001 )
   VirtualMachine vm( out, err, gc );
 
   CodeObject code;
-
-  Value a( 2 );
-  Value b( 3 );
-
-  code.instructions.push_back( OP_LOAD_CONST );
-  code.instructions.push_back( 0 );
-  code.instructions.push_back( OP_LOAD_CONST );
-  code.instructions.push_back( 1 );
-  code.instructions.push_back( OP_BINARY_ADD );
-  code.instructions.push_back( OP_DEBUG_PRINT );
-  code.literals.push_back( a );
-  code.literals.push_back( b );
+  code.emit_literal( Value( 2 ) );
+  code.emit_literal( Value( 3 ) );
+  code.emit_instr( OP_BINARY_ADD );
+  code.emit_instr( OP_DEBUG_PRINT );
 
   int r = vm.run( &code );
   ASSERT_EQ( r, 0 );
-  ASSERT_EQ( out.str(), "" );
+  ASSERT_EQ( out.str(), "5" );
   ASSERT_EQ( err.str(), "" );
 }
