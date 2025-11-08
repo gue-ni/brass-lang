@@ -36,7 +36,23 @@ ParseResult<T> make_error( const std::string & error )
 
 class Parser
 {
-};
+public:
+  Parser( const std::vector<Token> & tokens, ArenaAllocator & arena );
+  ParseResult<Program> run();
 
+private:
+  const std::vector<Token> m_tokens;
+  std::vector<Token>::const_iterator m_pos;
+  ArenaAllocator & m_arena;
+
+  ParseResult<Program> parse_program();
+
+  const Token & peek();
+  const Token & previous();
+  const Token & next();
+  bool match( TokenType type );
+  void expect( TokenType type, const std::string & lexeme = "" );
+  bool is_finished();
+};
 
 ParseResult<Program> parse( const std::vector<Token> & tokens, ArenaAllocator & allocator );

@@ -3,8 +3,8 @@
 
 struct AstNode;
 
-class Compiler {
-public:
+struct Compiler
+{
   CodeObject code;
 };
 
