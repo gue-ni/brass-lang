@@ -8,7 +8,7 @@ Parser::Parser( const std::vector<Token> & tokens, ArenaAllocator & arena )
 {
 }
 
-ParseResult<Program> Parser::run()
+Result<Program> Parser::run()
 {
   return parse_program();
 }
@@ -18,7 +18,7 @@ const Token & Parser::previous()
   return *( m_pos - 1 );
 }
 
-ParseResult<Program> Parser::parse_program()
+Result<Program> Parser::parse_program()
 {
   Program * ast = m_arena.alloc<Program>();
   return make_result( ast );
@@ -64,7 +64,7 @@ bool Parser::is_finished()
   return m_pos == m_tokens.end();
 }
 
-ParseResult<Program> parse( const std::vector<Token> & tokens, ArenaAllocator & allocator )
+Result<Program> parse( const std::vector<Token> & tokens, ArenaAllocator & allocator )
 {
   Parser parser( tokens, allocator );
   return parser.run();

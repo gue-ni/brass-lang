@@ -8,7 +8,7 @@
 #include <vector>
 
 template <typename NodeType>
-struct ParseResult
+struct Result
 {
   std::string error;
   NodeType * node;
@@ -19,17 +19,17 @@ struct ParseResult
 };
 
 template <typename T>
-ParseResult<T> make_result( T * node )
+Result<T> make_result( T * node )
 {
-  ParseResult<T> r;
+  Result<T> r;
   r.node = node;
   return r;
 }
 
 template <typename T>
-ParseResult<T> make_error( const std::string & error )
+Result<T> make_error( const std::string & error )
 {
-  ParseResult<T> r;
+  Result<T> r;
   r.error = "Parser Error: " + error;
   return r;
 }
@@ -38,14 +38,14 @@ class Parser
 {
 public:
   Parser( const std::vector<Token> & tokens, ArenaAllocator & arena );
-  ParseResult<Program> run();
+  Result<Program> run();
 
 private:
   const std::vector<Token> m_tokens;
   std::vector<Token>::const_iterator m_pos;
   ArenaAllocator & m_arena;
 
-  ParseResult<Program> parse_program();
+  Result<Program> parse_program();
 
   const Token & peek();
   const Token & previous();
@@ -55,4 +55,4 @@ private:
   bool is_finished();
 };
 
-ParseResult<Program> parse( const std::vector<Token> & tokens, ArenaAllocator & allocator );
+Result<Program> parse( const std::vector<Token> & tokens, ArenaAllocator & allocator );

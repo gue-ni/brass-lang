@@ -13,7 +13,7 @@ int eval( const char * src, std::ostream & out, std::ostream & err )
   ArenaAllocator allocator( 4096 );
   GarbageCollector gc;
 
-  ParseResult<Program> result = parse( tokens, allocator );
+  Result<Program> result = parse( tokens, allocator );
 
   if( !result.is_ok() )
   {
