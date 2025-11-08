@@ -18,11 +18,11 @@ protected:
 TEST_F( Unittest, test_000 )
 {
   const char * src = R"(
-print(1 + 2);
+print(2 + 3);
   )";
   int r            = eval( src, out, err );
   ASSERT_EQ( r, 0 );
-  ASSERT_EQ( out.str(), "" );
+  ASSERT_EQ( out.str(), "5" );
   ASSERT_EQ( err.str(), "" );
 }
 

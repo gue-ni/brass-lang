@@ -7,3 +7,11 @@ using uint = unsigned int;
 #else
 #define STDDUP strdup
 #endif
+
+template <typename T>
+class Map
+{
+public:
+
+private:
+};

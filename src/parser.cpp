@@ -78,6 +78,11 @@ Result<Stmt> Parser::parse_stmt()
 
 Result<Expr> Parser::parse_expr()
 {
+  return parse_term();
+}
+
+Result<Expr> Parser::parse_primary()
+{
   if( match( NUMBER ) )
   {
     const Token & prev = previous();
@@ -89,6 +94,37 @@ Result<Expr> Parser::parse_expr()
   {
     return make_error<Expr>( "Not Implemented" );
   }
+}
+
+Result<Expr> Parser::parse_term()
+{
+  Expr * expr = nullptr;
+  auto left   = parse_factor();
+  if( !left.ok() )
+  {
+    return make_error<Expr>( left.error );
+  }
+
+  if( match( PLUS ) )
+  {
+    auto right = parse_factor();
+    if( !right.ok() )
+    {
+      return make_error<Expr>( right.error );
+    }
+    expr = m_arena.alloc<Binary>( left.node, right.node );
+  }
+  else
+  {
+    expr = left.node;
+  }
+
+  return make_result( expr );
+}
+
+Result<Expr> Parser::parse_factor()
+{
+  return parse_primary();
 }
 
 const Token & Parser::peek()

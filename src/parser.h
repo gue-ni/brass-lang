@@ -48,6 +48,9 @@ private:
   Result<Program> parse_program();
   Result<Stmt> parse_stmt();
   Result<Expr> parse_expr();
+  Result<Expr> parse_primary();
+  Result<Expr> parse_term();
+  Result<Expr> parse_factor();
 
   const Token & peek();
   const Token & previous();
