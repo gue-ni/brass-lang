@@ -35,6 +35,16 @@ struct Binary : Expr
 
 struct FnCall : Expr
 {
+  Expr* callee;
+  std::vector<Expr*> args;
+  FnCall(Expr* callee, const std::vector<Expr*>& args);
+  void compile( Compiler & compiler ) override;
+};
+
+struct Variable : Expr {
+  std::string name;
+  Variable(const std::string& name);
+  void compile( Compiler & compiler ) override;
 };
 
 struct Program : Stmt

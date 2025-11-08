@@ -46,9 +46,8 @@ Object Object::Function( FunctionObject * fn )
   return obj;
 }
 
-FunctionObject::FunctionObject( const char * fn_name, uint8_t arity, CodeObject * code_object )
+FunctionObject::FunctionObject( const char * fn_name, uint8_t arity)
     : arity( arity )
-    , code_object( code_object )
 {
   strncpy( name, fn_name, sizeof( name ) );
 }

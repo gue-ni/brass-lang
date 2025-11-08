@@ -3,7 +3,8 @@
 
 CodeObject compile( AstNode * ast, GarbageCollector& gc )
 {
-  Compiler compiler(gc);
+  CodeObject code;
+  Compiler compiler(gc, &code);
   ast->compile( compiler );
-  return compiler.code;
+  return code;
 }

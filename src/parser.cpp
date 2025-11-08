@@ -134,6 +134,25 @@ Result<Expr> Parser::parse_primary()
     Literal * literal = m_arena.alloc<Literal>( Object::Integer( value ) );
     return make_result<Expr>( literal );
   }
+  else if( match( IDENTIFIER ) )
+  {
+    Variable * var = m_arena.alloc<Variable>( previous().lexeme );
+
+    if( !match( LPAREN ) )
+    {
+      return make_error<Expr>( "Expected '('" );
+    }
+
+    std::vector<Expr *> args;
+
+    if( !match( RPAREN ) )
+    {
+      return make_error<Expr>( "Expected ')'" );
+    }
+
+    FnCall * fn_call = m_arena.alloc<FnCall>( var, args );
+    return make_result<Expr>( fn_call );
+  }
   else
   {
     return make_error<Expr>( "Not Implemented" );

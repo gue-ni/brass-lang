@@ -85,13 +85,12 @@ print(x);
 
   GarbageCollector gc;
 
-  CodeObject func;
-  func.emit_instr( OP_LOAD_FAST, 0 ); // a
-  func.emit_instr( OP_LOAD_FAST, 1 ); // b
-  func.emit_instr( OP_ADD );
-  func.emit_instr( OP_RETURN );
-
-  FunctionObject * fn = gc.alloc<FunctionObject>( "add", 2, &func );
+  // CodeObject func;
+  FunctionObject * fn = gc.alloc<FunctionObject>( "add", 2 );
+  fn->code_object.emit_instr( OP_LOAD_FAST, 0 ); // a
+  fn->code_object.emit_instr( OP_LOAD_FAST, 1 ); // b
+  fn->code_object.emit_instr( OP_ADD );
+  fn->code_object.emit_instr( OP_RETURN );
 
   CodeObject code;
   code.names.push_back( "add" );
@@ -131,17 +130,18 @@ print(42);
   ASSERT_EQ( err.str(), "" );
 }
 
-TEST_F( Unittest, test_006 )
+TEST_F( Unittest, test_function_declaration )
 {
   const char * src = R"(
 fn meaning_of_life() {
   return 42;
 }
 
+print(meaning_of_life());
   )";
 
-  (void) eval( src, out, err );
+  ( void ) eval( src, out, err );
 
-  ASSERT_EQ( err.str(), "42" );
-  ASSERT_EQ( out.str(), "" );
+  ASSERT_EQ( out.str(), "42" );
+  ASSERT_EQ( err.str(), "" );
 }

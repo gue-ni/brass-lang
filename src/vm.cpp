@@ -74,16 +74,16 @@ int VirtualMachine::run( CodeObject * co )
           assert( obj.type == Object::Type::FUNCTION );
           FunctionObject * fn = obj.function;
           size_t bp           = m_stack.size() - fn->arity;
-          m_frames.push( Frame( fn->code_object, bp ) );
+          m_frames.push( Frame( &fn->code_object, bp ) );
           break;
         }
       case OP_RETURN :
         {
           Object return_value = pop();
-          Frame& frame = m_frames.top();
-          m_stack.resize(frame.bp);
+          Frame & frame       = m_frames.top();
+          m_stack.resize( frame.bp );
           m_frames.pop();
-          push(return_value);
+          push( return_value );
           break;
         }
       default :

@@ -1,4 +1,5 @@
 #include "bytecode.h"
+#include "object.h"
 
 void CodeObject::emit_instr( Instruction instr )
 {

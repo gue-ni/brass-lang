@@ -7,9 +7,9 @@ struct AstNode;
 struct Compiler
 {
   GarbageCollector & gc;
-  CodeObject code;
-  Compiler( GarbageCollector & gc )
-      : gc( gc )
+  CodeObject *code;
+  Compiler( GarbageCollector & gc, CodeObject* code )
+      : gc( gc ), code(code)
   {
   }
 };

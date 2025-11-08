@@ -4,7 +4,8 @@
 #include <string>
 #include <vector>
 
-#include "object.h"
+//#include "object.h"
+class Object;
 
 enum Instruction : uint8_t
 {
