@@ -121,8 +121,10 @@ std::pair<Instruction, uint16_t> VirtualMachine::next_instr()
     case OP_STORE_VAR :
     case OP_LOAD_FAST :
       {
-        uint8_t arg = *( current_frame().ip++ );
-        return std::make_pair( instr, ( uint16_t ) arg );
+        uint8_t hi   = *( current_frame().ip++ );
+        uint8_t lo   = *( current_frame().ip++ );
+        uint16_t arg = ( uint16_t( hi ) << 8 ) | ( uint16_t( lo ) );
+        return std::make_pair( instr, arg );
       }
     default :
       return std::make_pair( instr, 0xffff );

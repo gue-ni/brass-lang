@@ -6,22 +6,25 @@ void CodeObject::emit_instr( Instruction instr )
   instructions.push_back( instr );
 }
 
-void CodeObject::emit_instr( Instruction instr, uint8_t arg )
+void CodeObject::emit_instr( Instruction instr, uint16_t arg )
 {
+  uint16_t hi = ( arg >> 8 ) & 0xff;
+  uint16_t lo = arg & 0xff;
   instructions.push_back( instr );
-  instructions.push_back( arg );
+  instructions.push_back( ( uint8_t ) hi );
+  instructions.push_back( ( uint8_t ) lo );
 }
 
 void CodeObject::emit_literal( Object value )
 {
-  size_t index = literals.size();
+  uint16_t index = ( uint16_t ) literals.size();
   literals.push_back( value );
-  emit_instr( OP_LOAD_CONST, static_cast<uint8_t>( index ) );
+  emit_instr( OP_LOAD_CONST, index );
 }
 
-uint8_t CodeObject::emit_name( const std::string & name )
+uint16_t CodeObject::emit_name( const std::string & name )
 {
-  size_t index = names.size();
-  names.push_back(name);
-  return static_cast<uint8_t>(index);
+  uint16_t index = ( uint16_t ) names.size();
+  names.push_back( name );
+  return index;
 }
