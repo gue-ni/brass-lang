@@ -1,7 +1,9 @@
 #include "compiler.h"
+#include "ast.h"
 
-CodeObject compile( AstNode * )
+CodeObject compile( AstNode * ast )
 {
-  CodeObject bc;
-  return bc;
+  Compiler compiler;
+  ast->compile( compiler );
+  return compiler.code;
 }

@@ -1,5 +1,11 @@
 #pragma once
-#include "ast.h"
 #include "bytecode.h"
+
+struct AstNode;
+
+class Compiler {
+public:
+  CodeObject code;
+};
 
 CodeObject compile( AstNode * );
