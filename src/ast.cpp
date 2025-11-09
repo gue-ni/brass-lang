@@ -82,13 +82,26 @@ void FnDecl::compile( Compiler & compiler )
 
   CodeObject * tmp = compiler.code;
   compiler.code    = &fn->code_object;
+
+  compiler.push_scope();
+
+  for( const std::string & arg : args )
+  {
+    uint16_t tmp = compiler.define_local( arg );
+  }
+
   body->compile( compiler );
+
+  fn->num_locals = compiler.num_locals;
+
+  compiler.pop_scope();
+
   compiler.code = tmp;
 
   auto var = compiler.code->emit_name( name );
   compiler.code->emit_literal( Object::Function( fn ) );
   compiler.code->emit_instr( OP_MAKE_FUNCTION );
-  compiler.code->emit_instr( OP_STORE_VAR, var );
+  compiler.code->emit_instr( OP_STORE_GLOBAL, var );
 }
 
 Return::Return( Expr * expr )
@@ -109,11 +122,19 @@ Variable::Variable( const std::string & name )
 
 void Variable::compile( Compiler & compiler )
 {
-  auto it = std::find( compiler.code->names.begin(), compiler.code->names.end(), name );
-  if( it != compiler.code->names.end() )
+  if( compiler.scopes.empty() )
   {
-    size_t index = std::distance( compiler.code->names.begin(), it );
-    compiler.code->emit_instr( OP_LOAD_VAR, ( uint8_t ) index );
+    auto it = std::find( compiler.code->names.begin(), compiler.code->names.end(), name );
+    if( it != compiler.code->names.end() )
+    {
+      size_t index = std::distance( compiler.code->names.begin(), it );
+      compiler.code->emit_instr( OP_LOAD_GLOBAL,  index );
+    }
+  }
+  else
+  {
+    uint16_t index = compiler.define_local(name);
+    compiler.code->emit_instr(OP_LOAD_LOCAL, index);
   }
 }
 
@@ -135,10 +156,12 @@ void FnCall::compile( Compiler & compiler )
 
 void Block::compile( Compiler & compiler )
 {
+  compiler.push_scope();
   for( Stmt * stmt : stmts )
   {
     stmt->compile( compiler );
   }
+  compiler.pop_scope();
 }
 
 VariableDecl::VariableDecl( const std::string & name, Expr * expr )
@@ -151,8 +174,16 @@ void VariableDecl::compile( Compiler & compiler )
 {
   expr->compile( compiler );
 
-  auto index = compiler.code->emit_name( name );
-  compiler.code->emit_instr( OP_STORE_VAR, index );
+  if( compiler.scopes.empty() )
+  {
+    uint16_t index = compiler.code->emit_name( name );
+    compiler.code->emit_instr( OP_STORE_GLOBAL, index );
+  }
+  else
+  {
+    uint16_t index = compiler.define_local( name );
+    compiler.code->emit_instr(OP_STORE_LOCAL, index);
+  }
 }
 
 Assignment::Assignment( const std::string & name, Expr * expr )
@@ -169,6 +200,6 @@ void Assignment::compile( Compiler & compiler )
     expr->compile( compiler );
 
     size_t index = std::distance( compiler.code->names.begin(), it );
-    compiler.code->emit_instr( OP_LOAD_VAR, ( uint8_t ) index );
+    compiler.code->emit_instr( OP_LOAD_GLOBAL, ( uint8_t ) index );
   }
 }
