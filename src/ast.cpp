@@ -154,3 +154,21 @@ void VariableDecl::compile( Compiler & compiler )
   auto index = compiler.code->emit_name( name );
   compiler.code->emit_instr( OP_STORE_VAR, index );
 }
+
+Assignment::Assignment( const std::string & name, Expr * expr )
+    : name( name )
+    , expr( expr )
+{
+}
+
+void Assignment::compile( Compiler & compiler )
+{
+  auto it = std::find( compiler.code->names.begin(), compiler.code->names.end(), name );
+  if( it != compiler.code->names.end() )
+  {
+    expr->compile( compiler );
+
+    size_t index = std::distance( compiler.code->names.begin(), it );
+    compiler.code->emit_instr( OP_LOAD_VAR, ( uint8_t ) index );
+  }
+}

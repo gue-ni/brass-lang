@@ -124,8 +124,29 @@ Result<Stmt> Parser::parse_stmt()
     }
 
     auto expr = parse_expr();
+    if( !expr.ok() )
+    {
+      return make_error<Stmt>( expr.error );
+    }
 
     stmt = m_arena.alloc<VariableDecl>( name, expr.node );
+  }
+  else if( match( IDENTIFIER ) )
+  {
+    std::string name = previous().lexeme;
+
+    if( !match( EQUAL ) )
+    {
+      return make_error<Stmt>( "Expected '='" );
+    }
+
+    auto expr = parse_expr();
+    if( !expr.ok() )
+    {
+      return make_error<Stmt>( expr.error );
+    }
+
+    stmt = m_arena.alloc<Assignment>( name, expr.node );
   }
 
   if( !match( SEMICOLON ) )
@@ -144,7 +165,6 @@ Result<Block> Parser::parse_block()
   Block * block = m_arena.alloc<Block>();
   do
   {
-
     if( peek().type == RBRACE )
     {
       break;
