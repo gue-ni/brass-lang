@@ -30,6 +30,7 @@ enum TokenType : uint
   KW_VAR,
   KW_FN,
   KW_PRINT,
+  KW_PRINTLN,
 
   NUMBER,
   STRING,

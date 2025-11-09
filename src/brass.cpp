@@ -5,6 +5,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "vm.h"
+#include <sstream>
 
 int eval( const char * src, std::ostream & out, std::ostream & err )
 {
@@ -24,7 +25,70 @@ int eval( const char * src, std::ostream & out, std::ostream & err )
 
   CodeObject code = compile( result.node, gc );
 
-  VirtualMachine vm(out, err, gc);
+  VirtualMachine vm( out, err, gc );
 
   return vm.run( &code );
+}
+
+std::string repl_header()
+{
+  std::stringstream ss;
+  ss << "Welcome to Brass! (Compiled " << __DATE__ << " " << __TIME__ << ")" << std::endl;
+  return ss.str();
+}
+
+int repl()
+{
+  ArenaAllocator allocator( 1024 );
+
+  GarbageCollector gc;
+
+  VirtualMachine vm( std::cout, std::cerr, gc );
+
+  CodeObject code_object;
+  Compiler compiler( gc, &code_object );
+
+  std::cout << repl_header() << std::endl;
+
+  const std::string prompt = "> ";
+
+  do
+  {
+    std::cout << prompt;
+
+    std::string line;
+    if( !std::getline( std::cin, line ) )
+    {
+      break;
+    }
+
+    if( line.empty() )
+    {
+      continue;
+    }
+
+    auto tokens = lex( line );
+    if( tokens.empty() )
+    {
+      continue;
+    }
+
+    auto ast = parse( tokens, allocator );
+    if( !ast.ok() )
+    {
+      std::cerr << ast.error << std::endl;
+      continue;
+    }
+
+    ast.node->compile( compiler );
+
+    vm.run( &code_object );
+
+  } while( true );
+  return 0;
+}
+
+int brass( int argc, char * argv[] )
+{
+  return repl();
 }

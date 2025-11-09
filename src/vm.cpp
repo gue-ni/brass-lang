@@ -77,6 +77,12 @@ int VirtualMachine::run( CodeObject * co )
           m_out << obj.integer;
           break;
         }
+      case OP_DEBUG_PRINTLN :
+        {
+          Object obj = pop();
+          m_out << obj.integer << std::endl;
+          break;
+        }
       case OP_MAKE_FUNCTION :
         {
           // TODO: setup environment

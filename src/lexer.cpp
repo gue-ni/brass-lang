@@ -131,6 +131,7 @@ void Lexer::handle_identifier()
       { "while", KW_WHILE },
       { "return", KW_RETURN },
       { "print", KW_PRINT },
+      { "println", KW_PRINTLN },
       { "var", KW_VAR },
       // clang-format on
   };

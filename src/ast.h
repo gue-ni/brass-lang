@@ -105,8 +105,9 @@ struct WhileStmt : Stmt
 
 struct DebugPrint : Stmt
 {
+  bool newline;
   Expr * expr;
-  DebugPrint( Expr * expr );
+  DebugPrint( Expr * expr, bool newline = false );
   void compile( Compiler & compiler ) override;
 };
 

@@ -54,15 +54,16 @@ void Binary::compile( Compiler & compiler )
   compiler.code->emit_instr( instr );
 }
 
-DebugPrint::DebugPrint( Expr * expr )
+DebugPrint::DebugPrint( Expr * expr, bool newline )
     : expr( expr )
+    , newline( newline )
 {
 }
 
 void DebugPrint::compile( Compiler & compiler )
 {
   expr->compile( compiler );
-  compiler.code->emit_instr( OP_DEBUG_PRINT );
+  compiler.code->emit_instr( newline ? OP_DEBUG_PRINTLN : OP_DEBUG_PRINT );
 }
 
 IfStmt::IfStmt( Expr * cond, Stmt * then_stmt, Stmt * else_stmt )

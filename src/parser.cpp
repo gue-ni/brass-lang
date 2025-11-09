@@ -40,8 +40,11 @@ Result<Stmt> Parser::parse_stmt()
 {
   bool expect_semicolon = true;
   Stmt * stmt           = nullptr;
-  if( match( KW_PRINT ) )
+  if( match( KW_PRINT ) || match( KW_PRINTLN ) )
   {
+
+    bool newline = previous().type == KW_PRINTLN ? true : false;
+
     if( !match( LPAREN ) )
     {
       return make_error<Stmt>( "Expected '('" );
@@ -58,7 +61,7 @@ Result<Stmt> Parser::parse_stmt()
       return make_error<Stmt>( "Expected ')'" );
     }
 
-    stmt = m_arena.alloc<DebugPrint>( expr.node );
+    stmt = m_arena.alloc<DebugPrint>( expr.node, newline );
   }
   else if( match( KW_FN ) )
   {
