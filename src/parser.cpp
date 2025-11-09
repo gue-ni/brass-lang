@@ -73,6 +73,28 @@ Result<Stmt> Parser::parse_stmt()
     {
       return make_error<Stmt>( "Expected '('" );
     }
+
+    std::vector<std::string> args;
+
+#if 1
+    do
+    {
+      if( peek().type == RPAREN )
+      {
+        break;
+      }
+
+      if( !match( IDENTIFIER ) )
+      {
+        return make_error<Stmt>( "Expected identifier" );
+      }
+
+      args.push_back( previous().lexeme );
+
+      ( void ) match( COMMA );
+    } while( !is_finished() );
+#endif
+
     if( !match( RPAREN ) )
     {
       return make_error<Stmt>( "Expected ')'" );
@@ -94,8 +116,7 @@ Result<Stmt> Parser::parse_stmt()
       return make_error<Stmt>( "Expected '}'" );
     }
 
-    std::vector<std::string> params;
-    stmt             = m_arena.alloc<FnDecl>( fn_name, params, body.node );
+    stmt             = m_arena.alloc<FnDecl>( fn_name, args, body.node );
     expect_semicolon = false;
   }
   else if( match( KW_RETURN ) )
@@ -124,8 +145,46 @@ Result<Stmt> Parser::parse_stmt()
     }
 
     auto expr = parse_expr();
+    if( !expr.ok() )
+    {
+      return make_error<Stmt>( expr.error );
+    }
 
     stmt = m_arena.alloc<VariableDecl>( name, expr.node );
+  }
+  else if( match( IDENTIFIER ) )
+  {
+    std::string name = previous().lexeme;
+
+    if( !match( EQUAL ) )
+    {
+      return make_error<Stmt>( "Expected '='" );
+    }
+
+    auto expr = parse_expr();
+    if( !expr.ok() )
+    {
+      return make_error<Stmt>( expr.error );
+    }
+
+    stmt = m_arena.alloc<Assignment>( name, expr.node );
+  }
+  else if( match( LBRACE ) )
+  {
+    expect_semicolon = false;
+
+    auto block = parse_block();
+    if( !block.ok() )
+    {
+      return make_error<Stmt>( block.error );
+    }
+
+    if( !match( RBRACE ) )
+    {
+      return make_error<Stmt>( "Expected '}'" );
+    }
+
+    stmt = block.node;
   }
 
   if( !match( SEMICOLON ) )
@@ -144,7 +203,6 @@ Result<Block> Parser::parse_block()
   Block * block = m_arena.alloc<Block>();
   do
   {
-
     if( peek().type == RBRACE )
     {
       break;
@@ -185,6 +243,28 @@ Result<Expr> Parser::parse_primary()
     }
 
     std::vector<Expr *> args;
+
+    do
+    {
+      if( peek().type == RPAREN )
+      {
+        break;
+      }
+
+      auto arg = parse_expr();
+      if (!arg.ok()) {
+
+      }
+
+
+      args.push_back( arg.node);
+
+
+
+      ( void ) match( COMMA );
+    } while( !is_finished() );
+
+
 
     if( !match( RPAREN ) )
     {

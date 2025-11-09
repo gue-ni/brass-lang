@@ -56,6 +56,14 @@ struct VariableDecl : Stmt
   void compile( Compiler & compiler ) override;
 };
 
+struct Assignment : Stmt
+{
+  std::string name;
+  Expr * expr;
+  Assignment( const std::string & name, Expr * expr );
+  void compile( Compiler & compiler ) override;
+};
+
 struct Program : Stmt
 {
   std::vector<Stmt *> stmts;

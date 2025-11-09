@@ -5,7 +5,7 @@ using uint = unsigned int;
 #ifdef WIN32
 #define STRDUP _strdup
 #else
-#define STDDUP strdup
+#define STRDUP strdup
 #endif
 
 template <typename T>

@@ -22,18 +22,15 @@ enum TokenType : uint
   EQUAL,
   EQUAL_EQUAL,
 
-  KW_FN,
-  KW_PRINT,
-
-  // control flow
   KW_IF,
   KW_ELSE,
   KW_FOR,
   KW_WHILE,
   KW_RETURN,
   KW_VAR,
+  KW_FN,
+  KW_PRINT,
 
-  // literals
   NUMBER,
   STRING,
 

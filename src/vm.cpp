@@ -12,6 +12,7 @@ VirtualMachine::VirtualMachine( std::ostream & out, std::ostream & err, GarbageC
 int VirtualMachine::run( CodeObject * co )
 {
   m_frames.push( Frame( co ) );
+  m_stack.resize( co->num_locals );
 
   while( !m_exit && ( current_frame().ip != current_frame().code_object->instructions.end() ) )
   {
@@ -24,7 +25,7 @@ int VirtualMachine::run( CodeObject * co )
           push( obj );
           break;
         }
-      case OP_LOAD_VAR :
+      case OP_LOAD_GLOBAL :
         {
           std::string var = current_frame().code_object->names[arg];
           auto it         = m_globals.find( var );
@@ -34,17 +35,23 @@ int VirtualMachine::run( CodeObject * co )
           }
           break;
         }
-      case OP_STORE_VAR :
+      case OP_STORE_GLOBAL :
         {
           std::string var = current_frame().code_object->names[arg];
           Object obj      = pop();
           m_globals[var]  = obj;
           break;
         }
-      case OP_LOAD_FAST :
+      case OP_LOAD_LOCAL :
         {
           Object obj = m_stack[current_frame().bp + arg];
           push( obj );
+          break;
+        }
+      case OP_STORE_LOCAL :
+        {
+          Object obj                        = pop();
+          m_stack[current_frame().bp + arg] = obj;
           break;
         }
       case OP_ADD :
@@ -72,18 +79,21 @@ int VirtualMachine::run( CodeObject * co )
         {
           Object obj = pop();
           assert( obj.type == Object::Type::FUNCTION );
-          FunctionObject * fn = obj.function;
-          size_t bp           = m_stack.size() - fn->arity;
+          FunctionObject * fn   = obj.function;
+          size_t stack_size     = m_stack.size();
+          size_t new_stack_size = stack_size + ( fn->code_object.num_locals - fn->num_args );
+          size_t bp             = m_stack.size() - fn->num_args;
+          m_stack.resize( new_stack_size );
           m_frames.push( Frame( &fn->code_object, bp ) );
           break;
         }
       case OP_RETURN :
         {
-          Object return_value = pop();
-          Frame & frame       = m_frames.top();
+          Object obj    = pop();
+          Frame & frame = m_frames.top();
           m_stack.resize( frame.bp );
           m_frames.pop();
-          push( return_value );
+          push( obj );
           break;
         }
       default :
@@ -117,9 +127,10 @@ std::pair<Instruction, uint16_t> VirtualMachine::next_instr()
   switch( instr )
   {
     case OP_LOAD_CONST :
-    case OP_LOAD_VAR :
-    case OP_STORE_VAR :
-    case OP_LOAD_FAST :
+    case OP_LOAD_GLOBAL :
+    case OP_STORE_GLOBAL :
+    case OP_LOAD_LOCAL :
+    case OP_STORE_LOCAL :
       {
         uint8_t hi   = *( current_frame().ip++ );
         uint8_t lo   = *( current_frame().ip++ );

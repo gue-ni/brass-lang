@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -9,9 +10,10 @@ class Object;
 enum Instruction : uint8_t
 {
   OP_LOAD_CONST,
-  OP_LOAD_VAR,
-  OP_STORE_VAR,
-  OP_LOAD_FAST,
+  OP_LOAD_GLOBAL,
+  OP_STORE_GLOBAL,
+  OP_LOAD_LOCAL,
+  OP_STORE_LOCAL,
   OP_MAKE_FUNCTION,
   OP_CALL_FUNCTION,
   OP_RETURN,
@@ -21,6 +23,7 @@ enum Instruction : uint8_t
 
 struct CodeObject
 {
+  uint16_t num_locals = 0;
   std::vector<Object> literals;
   std::vector<uint8_t> instructions;
   std::vector<std::string> names;

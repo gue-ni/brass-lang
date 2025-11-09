@@ -1,5 +1,6 @@
 #include "object.h"
 #include "utils.h"
+#include <cstring>
 
 Object::Object()
     : type( NIL )
@@ -47,7 +48,7 @@ Object Object::Function( FunctionObject * fn )
 }
 
 FunctionObject::FunctionObject( const char * fn_name, uint8_t arity)
-    : arity( arity )
+    : num_args( arity )
 {
   strncpy( name, fn_name, sizeof( name ) );
 }
