@@ -1,4 +1,5 @@
 #include "ast.h"
+#include <algorithm> 
 
 void AstNode::compile( Compiler & )
 {

@@ -1,5 +1,6 @@
 #include "object.h"
 #include "utils.h"
+#include <cstring>
 
 Object::Object()
     : type( NIL )
