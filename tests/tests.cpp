@@ -21,9 +21,9 @@ TEST_F( Unittest, test_000 )
 print(2 + 3);
   )";
   int r            = eval( src, out, err );
-  ASSERT_EQ( r, 0 );
-  ASSERT_EQ( out.str(), "5" );
-  ASSERT_EQ( err.str(), "" );
+  EXPECT_EQ( r, 0 );
+  EXPECT_EQ( out.str(), "5" );
+  EXPECT_EQ( err.str(), "" );
 }
 
 TEST_F( Unittest, test_001 )
@@ -39,9 +39,9 @@ TEST_F( Unittest, test_001 )
 
   int r = vm.run( &code );
 
-  ASSERT_EQ( r, 0 );
-  ASSERT_EQ( out.str(), "5" );
-  ASSERT_EQ( err.str(), "" );
+  EXPECT_EQ( r, 0 );
+  EXPECT_EQ( out.str(), "5" );
+  EXPECT_EQ( err.str(), "" );
 }
 
 TEST_F( Unittest, test_002 )
@@ -66,9 +66,9 @@ TEST_F( Unittest, test_002 )
 
   int r = vm.run( &code );
 
-  ASSERT_EQ( r, 0 );
-  ASSERT_EQ( out.str(), "425" );
-  ASSERT_EQ( err.str(), "" );
+  EXPECT_EQ( r, 0 );
+  EXPECT_EQ( out.str(), "425" );
+  EXPECT_EQ( err.str(), "" );
 }
 
 #if 0
@@ -113,9 +113,9 @@ print(x);
 
   int r = vm.run( &code );
 
-  ASSERT_EQ( r, 0 );
-  ASSERT_EQ( out.str(), "5" );
-  ASSERT_EQ( err.str(), "" );
+  EXPECT_EQ( r, 0 );
+  EXPECT_EQ( out.str(), "5" );
+  EXPECT_EQ( err.str(), "" );
 }
 #endif
 
@@ -127,9 +127,9 @@ print(42);
 
   int r = eval( src, out, err );
 
-  ASSERT_EQ( r, 0 );
-  ASSERT_EQ( out.str(), "42" );
-  ASSERT_EQ( err.str(), "" );
+  EXPECT_EQ( r, 0 );
+  EXPECT_EQ( out.str(), "42" );
+  EXPECT_EQ( err.str(), "" );
 }
 
 TEST_F( Unittest, test_fn_decl )
@@ -144,8 +144,8 @@ print(meaning_of_life());
 
   ( void ) eval( src, out, err );
 
-  ASSERT_EQ( out.str(), "42" );
-  ASSERT_EQ( err.str(), "" );
+  EXPECT_EQ( out.str(), "42" );
+  EXPECT_EQ( err.str(), "" );
 }
 
 TEST_F( Unittest, test_var_decl )
@@ -158,8 +158,8 @@ print(x);
 
   ( void ) eval( src, out, err );
 
-  ASSERT_EQ( out.str(), "5" );
-  ASSERT_EQ( err.str(), "" );
+  EXPECT_EQ( out.str(), "5" );
+  EXPECT_EQ( err.str(), "" );
 }
 
 TEST_F( Unittest, test_block_02 )
@@ -175,25 +175,47 @@ print( foo(2, 3) );
 
   ( void ) eval( src, out, err );
 
-  ASSERT_EQ( out.str(), "5" );
-  ASSERT_EQ( err.str(), "" );
+  EXPECT_EQ( out.str(), "5" );
+  EXPECT_EQ( err.str(), "" );
 }
 
 TEST_F( Unittest, test_block_01 )
 {
   const char * src = R"(
 var a = 1;
+print(a);
 {
   var b = 2;
   print(b);
+}
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "12" );
+  EXPECT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, test_block_03 )
+{
+  const char * src = R"(
+var a = 1;
+print(a);
+{
+  var b = 2;
+  print(b);
+  {
+    var c = b + 1;
+    print(c);
+
+    a = b + c;
+  }
 }
 print(a);
   )";
 
   ( void ) eval( src, out, err );
 
-  ASSERT_EQ( out.str(), "21" );
-  ASSERT_EQ( err.str(), "" );
+  EXPECT_EQ( out.str(), "1235" );
+  EXPECT_EQ( err.str(), "" );
 }
-
-
