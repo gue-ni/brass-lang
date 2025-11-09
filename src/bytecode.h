@@ -20,8 +20,8 @@ enum Instruction : uint8_t
   OP_RETURN,
   OP_ADD,
   OP_SUB,
-  OP_DEBUG_PRINT,
-  OP_DEBUG_PRINTLN,
+  OP_PRINT,
+  OP_PRINTLN,
 };
 
 struct CodeObject

@@ -32,7 +32,7 @@ TEST_F( Unittest, test_001 )
   code.emit_literal( Object::Integer( 2 ) );
   code.emit_literal( Object::Integer( 3 ) );
   code.emit_instr( OP_ADD );
-  code.emit_instr( OP_DEBUG_PRINT );
+  code.emit_instr( OP_PRINT );
 
   GarbageCollector gc;
   VirtualMachine vm( out, err, gc );

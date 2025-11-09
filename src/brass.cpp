@@ -83,6 +83,7 @@ int repl()
     ast.node->compile( compiler );
 
     vm.run( &code_object );
+    code_object.instructions.clear();
 
   } while( true );
   return 0;
