@@ -6,7 +6,7 @@
 
 class Object;
 
-enum Instruction : uint8_t
+enum Instruction
 {
   OP_LOAD_CONST,
   OP_LOAD_GLOBAL,
