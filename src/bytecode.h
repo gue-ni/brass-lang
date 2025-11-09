@@ -22,6 +22,7 @@ enum Instruction : uint8_t
 
 struct CodeObject
 {
+  uint16_t num_locals = 0;
   std::vector<Object> literals;
   std::vector<uint8_t> instructions;
   std::vector<std::string> names;

@@ -92,7 +92,7 @@ void FnDecl::compile( Compiler & compiler )
 
   body->compile( compiler );
 
-  fn->num_locals = compiler.num_locals;
+  //fn->num_locals = compiler.num_locals;
 
   compiler.pop_scope();
 

@@ -19,9 +19,11 @@ void Compiler::pop_scope()
   scope_offset -= scopes.back().size();
   scopes.pop_back();
 
+  #if 0
   if (scopes.empty()) {
-    num_locals = 0; // reset local count
+    code->num_locals = 0; // reset local count
   }
+  #endif
 }
 
 uint16_t Compiler::find_in_scopes( const std::string & name )
@@ -48,7 +50,7 @@ uint16_t Compiler::define_local( const std::string & name )
   }
   else
   {
-    num_locals++;
+    code->num_locals++;
     auto & scope    = scopes.back();
     uint16_t offset = scope_offset++;
     scope[name]     = offset;

@@ -192,7 +192,7 @@ print(a);
 
   ( void ) eval( src, out, err );
 
-  ASSERT_EQ( out.str(), "" );
+  ASSERT_EQ( out.str(), "21" );
   ASSERT_EQ( err.str(), "" );
 }
 
