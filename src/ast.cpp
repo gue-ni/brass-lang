@@ -1,5 +1,5 @@
 #include "ast.h"
-#include <algorithm> 
+#include <algorithm>
 
 void AstNode::compile( Compiler & )
 {
@@ -83,7 +83,6 @@ void FnDecl::compile( Compiler & compiler )
 
   CodeObject * tmp = compiler.code;
   compiler.code    = &fn->code_object;
-
   compiler.push_scope();
 
   for( const std::string & arg : args )
@@ -93,10 +92,7 @@ void FnDecl::compile( Compiler & compiler )
 
   body->compile( compiler );
 
-  //fn->num_locals = compiler.num_locals;
-
   compiler.pop_scope();
-
   compiler.code = tmp;
 
   auto var = compiler.code->emit_name( name );
@@ -129,13 +125,13 @@ void Variable::compile( Compiler & compiler )
     if( it != compiler.code->names.end() )
     {
       size_t index = std::distance( compiler.code->names.begin(), it );
-      compiler.code->emit_instr( OP_LOAD_GLOBAL,  index );
+      compiler.code->emit_instr( OP_LOAD_GLOBAL, index );
     }
   }
   else
   {
-    uint16_t index = compiler.define_local(name);
-    compiler.code->emit_instr(OP_LOAD_LOCAL, index);
+    uint16_t index = compiler.define_local( name );
+    compiler.code->emit_instr( OP_LOAD_LOCAL, index );
   }
 }
 
@@ -183,7 +179,7 @@ void VariableDecl::compile( Compiler & compiler )
   else
   {
     uint16_t index = compiler.define_local( name );
-    compiler.code->emit_instr(OP_STORE_LOCAL, index);
+    compiler.code->emit_instr( OP_STORE_LOCAL, index );
   }
 }
 
