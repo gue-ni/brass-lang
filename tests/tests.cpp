@@ -54,7 +54,7 @@ TEST_F( Unittest, test_002 )
   prog->stmts.push_back( stmt_1 );
 
   Stmt * stmt_2 = allocator.alloc<DebugPrint>( allocator.alloc<Binary>(
-      allocator.alloc<Literal>( Object::Integer( 2 ) ), allocator.alloc<Literal>( Object::Integer( 3 ) ) ) );
+      "+", allocator.alloc<Literal>( Object::Integer( 2 ) ), allocator.alloc<Literal>( Object::Integer( 3 ) ) ) );
 
   prog->stmts.push_back( stmt_2 );
 
@@ -217,5 +217,17 @@ print(a);
   ( void ) eval( src, out, err );
 
   EXPECT_EQ( out.str(), "1235" );
+  EXPECT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, test_binary_01 )
+{
+  const char * src = R"(
+print(3 - 5);
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "-2" );
   EXPECT_EQ( err.str(), "" );
 }

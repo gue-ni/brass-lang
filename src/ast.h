@@ -27,9 +27,10 @@ struct Literal : Expr
 
 struct Binary : Expr
 {
+  std::string op;
   Expr * rhs;
   Expr * lhs;
-  Binary( Expr * lhs, Expr * rhs );
+  Binary( const std::string& op, Expr * lhs, Expr * rhs );
   void compile( Compiler & compiler ) override;
 };
 

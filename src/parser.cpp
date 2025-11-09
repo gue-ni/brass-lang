@@ -252,19 +252,14 @@ Result<Expr> Parser::parse_primary()
       }
 
       auto arg = parse_expr();
-      if (!arg.ok()) {
-
+      if( !arg.ok() )
+      {
       }
 
-
-      args.push_back( arg.node);
-
-
+      args.push_back( arg.node );
 
       ( void ) match( COMMA );
     } while( !is_finished() );
-
-
 
     if( !match( RPAREN ) )
     {
@@ -289,14 +284,15 @@ Result<Expr> Parser::parse_term()
     return make_error<Expr>( left.error );
   }
 
-  if( match( PLUS ) )
+  if( match( PLUS ) || match( MINUS ) )
   {
-    auto right = parse_factor();
+    std::string op = previous().lexeme;
+    auto right     = parse_factor();
     if( !right.ok() )
     {
       return make_error<Expr>( right.error );
     }
-    expr = m_arena.alloc<Binary>( left.node, right.node );
+    expr = m_arena.alloc<Binary>( op, left.node, right.node );
   }
   else
   {

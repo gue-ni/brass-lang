@@ -9,6 +9,7 @@ class Object;
 
 enum Instruction : uint8_t
 {
+  OP_NOP,
   OP_LOAD_CONST,
   OP_LOAD_GLOBAL,
   OP_STORE_GLOBAL,
@@ -18,6 +19,7 @@ enum Instruction : uint8_t
   OP_CALL_FUNCTION,
   OP_RETURN,
   OP_ADD,
+  OP_SUB,
   OP_DEBUG_PRINT,
 };
 

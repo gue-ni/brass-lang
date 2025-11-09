@@ -1,5 +1,6 @@
 #include "ast.h"
 #include <algorithm>
+#include <cassert>
 
 void AstNode::compile( Compiler & )
 {
@@ -23,8 +24,9 @@ void Program::compile( Compiler & compiler )
   }
 }
 
-Binary::Binary( Expr * lhs, Expr * rhs )
-    : lhs( lhs )
+Binary::Binary( const std::string & op, Expr * lhs, Expr * rhs )
+    : op( op )
+    , lhs( lhs )
     , rhs( rhs )
 {
 }
@@ -33,7 +35,23 @@ void Binary::compile( Compiler & compiler )
 {
   rhs->compile( compiler );
   lhs->compile( compiler );
-  compiler.code->emit_instr( OP_ADD );
+
+  Instruction instr = OP_NOP;
+
+  if( op == "+" )
+  {
+    instr = OP_ADD;
+  }
+  else if( op == "-" )
+  {
+    instr = OP_SUB;
+  }
+  else
+  {
+    assert( false && "Unreachable" );
+  }
+
+  compiler.code->emit_instr( instr );
 }
 
 DebugPrint::DebugPrint( Expr * expr )
@@ -81,8 +99,8 @@ void FnDecl::compile( Compiler & compiler )
 {
   FunctionObject * fn = compiler.gc.alloc<FunctionObject>( name.c_str(), ( uint8_t ) args.size() );
 
-  CodeObject * tmp = compiler.code;
-  compiler.code    = &fn->code_object;
+  CodeObject * context = compiler.code;
+  compiler.code        = &fn->code_object;
   compiler.push_scope();
 
   for( const std::string & arg : args )
@@ -93,14 +111,12 @@ void FnDecl::compile( Compiler & compiler )
   body->compile( compiler );
 
   compiler.pop_scope();
-  compiler.code = tmp;
+  compiler.code = context;
 
-  // auto var = compiler.code->emit_name( name );
-
-  auto var = compiler.define_var( name );
+  uint16_t index = compiler.define_var( name );
   compiler.code->emit_literal( Object::Function( fn ) );
   compiler.code->emit_instr( OP_MAKE_FUNCTION );
-  compiler.code->emit_instr( OP_STORE_GLOBAL, var );
+  compiler.code->emit_instr( OP_STORE_GLOBAL, index );
 }
 
 Return::Return( Expr * expr )

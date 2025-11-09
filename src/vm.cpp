@@ -58,10 +58,17 @@ int VirtualMachine::run( CodeObject * co )
         {
           Object lhs    = pop();
           Object rhs    = pop();
-          int a         = lhs.integer;
-          int b         = rhs.integer;
-          Object result = Object::Integer( a + b );
+          Object result = Object::Integer( lhs.integer + rhs.integer );
           push( result );
+          break;
+        }
+      case OP_SUB :
+        {
+          Object lhs    = pop();
+          Object rhs    = pop();
+          Object result = Object::Integer( lhs.integer - rhs.integer );
+          push( result );
+          break;
           break;
         }
       case OP_DEBUG_PRINT :
@@ -97,6 +104,7 @@ int VirtualMachine::run( CodeObject * co )
           break;
         }
       default :
+        assert( false );
         m_exit = true;
         break;
     }
