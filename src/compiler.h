@@ -22,12 +22,14 @@ struct Compiler
       , code( code )
       , scope_offset( 0 )
   {
+    scopes.push_back( {} ); // global scope
   }
 
   void push_scope();
   void pop_scope();
   uint16_t find_in_scopes( const std::string & name );
-  uint16_t define_local( const std::string & name );
+  std::pair<uint16_t, bool> find_var( const std::string & name );
+  uint16_t define_var( const std::string & name );
 };
 
 CodeObject compile( AstNode *, GarbageCollector & gc );

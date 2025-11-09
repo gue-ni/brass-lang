@@ -87,7 +87,7 @@ void FnDecl::compile( Compiler & compiler )
 
   for( const std::string & arg : args )
   {
-    uint16_t tmp = compiler.define_local( arg );
+    uint16_t tmp = compiler.define_var( arg );
   }
 
   body->compile( compiler );
@@ -95,7 +95,9 @@ void FnDecl::compile( Compiler & compiler )
   compiler.pop_scope();
   compiler.code = tmp;
 
-  auto var = compiler.code->emit_name( name );
+  // auto var = compiler.code->emit_name( name );
+
+  auto var = compiler.define_var( name );
   compiler.code->emit_literal( Object::Function( fn ) );
   compiler.code->emit_instr( OP_MAKE_FUNCTION );
   compiler.code->emit_instr( OP_STORE_GLOBAL, var );
@@ -119,18 +121,13 @@ Variable::Variable( const std::string & name )
 
 void Variable::compile( Compiler & compiler )
 {
-  if( compiler.scopes.empty() )
+  auto [index, is_global] = compiler.find_var( name );
+  if( is_global )
   {
-    auto it = std::find( compiler.code->names.begin(), compiler.code->names.end(), name );
-    if( it != compiler.code->names.end() )
-    {
-      size_t index = std::distance( compiler.code->names.begin(), it );
-      compiler.code->emit_instr( OP_LOAD_GLOBAL, index );
-    }
+    compiler.code->emit_instr( OP_LOAD_GLOBAL, index );
   }
   else
   {
-    uint16_t index = compiler.define_local( name );
     compiler.code->emit_instr( OP_LOAD_LOCAL, index );
   }
 }
@@ -171,14 +168,14 @@ void VariableDecl::compile( Compiler & compiler )
 {
   expr->compile( compiler );
 
-  if( compiler.scopes.empty() )
+  if( compiler.scopes.size() == 1 )
   {
-    uint16_t index = compiler.code->emit_name( name );
+    uint16_t index = compiler.define_var( name );
     compiler.code->emit_instr( OP_STORE_GLOBAL, index );
   }
   else
   {
-    uint16_t index = compiler.define_local( name );
+    uint16_t index = compiler.define_var( name );
     compiler.code->emit_instr( OP_STORE_LOCAL, index );
   }
 }
@@ -191,12 +188,15 @@ Assignment::Assignment( const std::string & name, Expr * expr )
 
 void Assignment::compile( Compiler & compiler )
 {
-  auto it = std::find( compiler.code->names.begin(), compiler.code->names.end(), name );
-  if( it != compiler.code->names.end() )
-  {
-    expr->compile( compiler );
+  expr->compile( compiler );
 
-    size_t index = std::distance( compiler.code->names.begin(), it );
-    compiler.code->emit_instr( OP_LOAD_GLOBAL, ( uint8_t ) index );
+  auto [index, is_global] = compiler.find_var( name );
+  if( is_global )
+  {
+    compiler.code->emit_instr( OP_STORE_GLOBAL, index );
+  }
+  else
+  {
+    compiler.code->emit_instr( OP_STORE_LOCAL, index );
   }
 }
