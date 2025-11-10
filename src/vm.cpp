@@ -74,13 +74,13 @@ int VirtualMachine::run( CodeObject * co )
       case OP_PRINT :
         {
           Object obj = pop();
-          m_out << obj.integer;
+          m_out << obj;
           break;
         }
       case OP_PRINTLN :
         {
           Object obj = pop();
-          m_out << obj.integer << std::endl;
+          m_out << obj << std::endl;
           break;
         }
       case OP_CALL :

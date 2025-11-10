@@ -1,5 +1,6 @@
 #include "object.h"
 #include "utils.h"
+#include <cassert>
 #include <cstring>
 
 Object::Object()
@@ -82,4 +83,39 @@ ClassObject::ClassObject( const char * cl_name )
 InstanceObject::InstanceObject( ClassObject * klass )
     : klass( klass )
 {
+}
+
+std::ostream & operator<<( std::ostream & os, const Object & obj )
+{
+  switch( obj.type )
+  {
+    case Object::Type::NIL :
+      os << "NIL";
+      break;
+    case Object::Type::BOOLEAN :
+      os << ( obj.boolean ? "true" : "false" );
+      break;
+    case Object::Type::INTEGER :
+      os << obj.integer;
+      break;
+    case Object::Type::REAL :
+      os << obj.real;
+      break;
+    case Object::Type::STRING :
+      os << obj.string;
+      break;
+    case Object::Type::FUNCTION :
+      os << "function<" << obj.function->name << ">";
+      break;
+    case Object::Type::CLASS :
+      os << "class<" << obj.klass->name << ">";
+      break;
+    case Object::Type::INSTANCE :
+      os << "instance<" << obj.instance->klass->name << ">";
+      break;
+    default :
+      assert( false );
+      break;
+  }
+  return os;
 }

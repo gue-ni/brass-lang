@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ostream>
 #include <string>
 
 #include "bytecode.h"
@@ -34,13 +35,13 @@ struct ObjectObject : public GarbageCollected
 struct ClassObject : public GarbageCollected
 {
   char * name;
-  ClassObject(const char *cl_name);
+  ClassObject( const char * cl_name );
 };
 
 struct InstanceObject : public GarbageCollected
 {
   ClassObject * klass;
-  InstanceObject(ClassObject* klass);
+  InstanceObject( ClassObject * klass );
 };
 
 class Object
@@ -84,3 +85,5 @@ public:
     InstanceObject * instance;
   };
 };
+
+std::ostream & operator<<( std::ostream &, const Object & );

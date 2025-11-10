@@ -231,3 +231,21 @@ print(3 - 5);
   EXPECT_EQ( out.str(), "-2" );
   EXPECT_EQ( err.str(), "" );
 }
+
+TEST_F( Unittest, test_class_01 )
+{
+  const char * src = R"(
+class Foo {}
+
+println(Foo);
+
+var f = Foo();
+
+println(f);
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "class<Foo>\ninstance<Foo>\n" );
+  EXPECT_EQ( err.str(), "" );
+}
