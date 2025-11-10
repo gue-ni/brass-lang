@@ -2,22 +2,22 @@
 
 #include "bytecode.h"
 #include "gc.h"
+#include "object.h"
 
+#include <map>
 #include <ostream>
 #include <stack>
-#include <map>
 
 struct Frame
 {
   CodeObject * code_object;
   std::vector<uint8_t>::const_iterator ip;
-  //std::stack<Object> stack;
   size_t bp;
 
   Frame( CodeObject * co, size_t bp = 0 )
       : code_object( co )
       , ip( code_object->instructions.begin() )
-      , bp(bp)
+      , bp( bp )
   {
   }
 };
@@ -41,4 +41,5 @@ private:
   Object pop();
   Frame & current_frame();
   std::pair<Instruction, uint16_t> next_instr();
+  void call_fn( FunctionObject * fn );
 };

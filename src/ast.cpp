@@ -162,7 +162,7 @@ void FnCall::compile( Compiler & compiler )
     expr->compile( compiler );
   }
   callee->compile( compiler );
-  compiler.code->emit_instr( OP_CALL_FUNCTION );
+  compiler.code->emit_instr( OP_CALL );
 }
 
 void Block::compile( Compiler & compiler )

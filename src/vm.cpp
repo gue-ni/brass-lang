@@ -88,16 +88,17 @@ int VirtualMachine::run( CodeObject * co )
           // TODO: setup environment
           break;
         }
-      case OP_CALL_FUNCTION :
+      case OP_CALL :
         {
           Object obj = pop();
-          assert( obj.type == Object::Type::FUNCTION );
-          FunctionObject * fn   = obj.function;
-          size_t stack_size     = m_stack.size();
-          size_t new_stack_size = stack_size + ( fn->code_object.num_locals - fn->num_args );
-          size_t bp             = m_stack.size() - fn->num_args;
-          m_stack.resize( new_stack_size );
-          m_frames.push( Frame( &fn->code_object, bp ) );
+          if( obj.type == Object::Type::FUNCTION )
+          {
+            call_fn( obj.function );
+          }
+          else
+          {
+            m_err << "Error: not a callable object" << std::endl;
+          }
           break;
         }
       case OP_RETURN :
@@ -154,4 +155,13 @@ std::pair<Instruction, uint16_t> VirtualMachine::next_instr()
     default :
       return std::make_pair( instr, 0xffff );
   }
+}
+
+void VirtualMachine::call_fn( FunctionObject * fn )
+{
+  size_t stack_size     = m_stack.size();
+  size_t new_stack_size = stack_size + ( fn->code_object.num_locals - fn->num_args );
+  size_t bp             = stack_size - fn->num_args;
+  m_stack.resize( new_stack_size );
+  m_frames.push( Frame( &fn->code_object, bp ) );
 }
