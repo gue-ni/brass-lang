@@ -7,6 +7,11 @@ Object::Object()
 {
 }
 
+Object Object::Nil()
+{
+  return Object();
+}
+
 Object Object::Boolean( bool value )
 {
   Object obj;
@@ -47,8 +52,34 @@ Object Object::Function( FunctionObject * fn )
   return obj;
 }
 
-FunctionObject::FunctionObject( const char * fn_name, uint8_t arity)
-    : num_args( arity )
+Object Object::Class( ClassObject * c )
 {
-  strncpy( name, fn_name, sizeof( name ) );
+  Object obj;
+  obj.type  = CLASS;
+  obj.klass = c;
+  return obj;
+}
+
+Object Object::Instance( InstanceObject * i )
+{
+  Object obj;
+  obj.type     = INSTANCE;
+  obj.instance = i;
+  return obj;
+}
+
+FunctionObject::FunctionObject( const char * fn_name, uint8_t arity )
+    : name( STRDUP( fn_name ) )
+    , num_args( arity )
+{
+}
+
+ClassObject::ClassObject( const char * cl_name )
+    : name( STRDUP( cl_name ) )
+{
+}
+
+InstanceObject::InstanceObject( ClassObject * klass )
+    : klass( klass )
+{
 }

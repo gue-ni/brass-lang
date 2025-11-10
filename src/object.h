@@ -9,7 +9,7 @@ class Object;
 
 struct FunctionObject : public GarbageCollected
 {
-  char name[32];
+  char * name;
   uint8_t num_args = 0;
   CodeObject code_object;
   FunctionObject( const char * fn_name, uint8_t arity );
@@ -31,6 +31,18 @@ struct ObjectObject : public GarbageCollected
   // TODO: add fields and a type
 };
 
+struct ClassObject : public GarbageCollected
+{
+  char * name;
+  ClassObject(const char *cl_name);
+};
+
+struct InstanceObject : public GarbageCollected
+{
+  ClassObject * klass;
+  InstanceObject(ClassObject* klass);
+};
+
 class Object
 {
 public:
@@ -44,15 +56,19 @@ public:
     LIST,
     MAP,
     FUNCTION,
-    OBJECT,
+    CLASS,
+    INSTANCE,
   };
 
   Object();
+  static Object Nil();
   static Object Boolean( bool );
   static Object Integer( int );
   static Object Real( double );
   static Object String( const char * );
   static Object Function( FunctionObject * );
+  static Object Class( ClassObject * );
+  static Object Instance( InstanceObject * );
 
   Type type;
   union
@@ -64,6 +80,7 @@ public:
     ListObject * list;
     MapObject * map;
     FunctionObject * function;
-    ObjectObject * object;
+    ClassObject * klass;
+    InstanceObject * instance;
   };
 };

@@ -83,17 +83,16 @@ int VirtualMachine::run( CodeObject * co )
           m_out << obj.integer << std::endl;
           break;
         }
-      case OP_MAKE_FUNCTION :
-        {
-          // TODO: setup environment
-          break;
-        }
       case OP_CALL :
         {
           Object obj = pop();
           if( obj.type == Object::Type::FUNCTION )
           {
             call_fn( obj.function );
+          }
+          else if( obj.type == Object::Type::CLASS )
+          {
+            call_ctor( obj.klass );
           }
           else
           {
@@ -164,4 +163,10 @@ void VirtualMachine::call_fn( FunctionObject * fn )
   size_t bp             = stack_size - fn->num_args;
   m_stack.resize( new_stack_size );
   m_frames.push( Frame( &fn->code_object, bp ) );
+}
+
+void VirtualMachine::call_ctor( ClassObject * cls )
+{
+  InstanceObject * instance = m_gc.alloc<InstanceObject>( cls );
+  push( Object::Instance( instance ) );
 }

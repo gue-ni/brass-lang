@@ -41,5 +41,6 @@ private:
   Object pop();
   Frame & current_frame();
   std::pair<Instruction, uint16_t> next_instr();
-  void call_fn( FunctionObject * fn );
+  void call_fn( FunctionObject * );
+  void call_ctor( ClassObject * );
 };

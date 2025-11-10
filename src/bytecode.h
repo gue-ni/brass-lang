@@ -15,7 +15,6 @@ enum Instruction : uint8_t
   OP_STORE_GLOBAL,
   OP_LOAD_LOCAL,
   OP_STORE_LOCAL,
-  OP_MAKE_FUNCTION,
   OP_CALL,
   OP_RETURN,
   OP_ADD,

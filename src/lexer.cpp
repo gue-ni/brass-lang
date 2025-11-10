@@ -133,6 +133,7 @@ void Lexer::handle_identifier()
       { "print", KW_PRINT },
       { "println", KW_PRINTLN },
       { "var", KW_VAR },
+      { "class", KW_CLASS },
       // clang-format on
   };
 
@@ -173,8 +174,8 @@ void Lexer::run()
         push_token( Token( SEMICOLON, c ) );
         break;
       case ',' :
-          push_token(Token(COMMA, c));
-          break;
+        push_token( Token( COMMA, c ) );
+        break;
       case '(' :
         push_token( Token( LPAREN, c ) );
         break;

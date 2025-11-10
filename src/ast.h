@@ -30,15 +30,15 @@ struct Binary : Expr
   std::string op;
   Expr * rhs;
   Expr * lhs;
-  Binary( const std::string& op, Expr * lhs, Expr * rhs );
+  Binary( const std::string & op, Expr * lhs, Expr * rhs );
   void compile( Compiler & compiler ) override;
 };
 
-struct FnCall : Expr
+struct Call : Expr
 {
   Expr * callee;
   std::vector<Expr *> args;
-  FnCall( Expr * callee, const std::vector<Expr *> & args );
+  Call( Expr * callee, const std::vector<Expr *> & args );
   void compile( Compiler & compiler ) override;
 };
 
@@ -115,5 +115,12 @@ struct Return : Stmt
 {
   Expr * expr;
   Return( Expr * expr );
+  void compile( Compiler & compiler ) override;
+};
+
+struct ClassDecl : Stmt
+{
+  std::string name;
+  ClassDecl( const std::string & name );
   void compile( Compiler & compiler ) override;
 };

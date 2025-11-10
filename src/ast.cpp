@@ -116,7 +116,6 @@ void FnDecl::compile( Compiler & compiler )
 
   uint16_t index = compiler.define_var( name );
   compiler.code->emit_literal( Object::Function( fn ) );
-  compiler.code->emit_instr( OP_MAKE_FUNCTION );
   compiler.code->emit_instr( OP_STORE_GLOBAL, index );
 }
 
@@ -139,23 +138,16 @@ Variable::Variable( const std::string & name )
 void Variable::compile( Compiler & compiler )
 {
   auto [index, is_global] = compiler.find_var( name );
-  if( is_global )
-  {
-    compiler.code->emit_instr( OP_LOAD_GLOBAL, index );
-  }
-  else
-  {
-    compiler.code->emit_instr( OP_LOAD_LOCAL, index );
-  }
+  compiler.code->emit_instr( is_global ? OP_LOAD_GLOBAL : OP_LOAD_LOCAL, index );
 }
 
-FnCall::FnCall( Expr * callee, const std::vector<Expr *> & args )
+Call::Call( Expr * callee, const std::vector<Expr *> & args )
     : callee( callee )
     , args( args )
 {
 }
 
-void FnCall::compile( Compiler & compiler )
+void Call::compile( Compiler & compiler )
 {
   for( Expr * expr : args )
   {
@@ -184,17 +176,9 @@ VariableDecl::VariableDecl( const std::string & name, Expr * expr )
 void VariableDecl::compile( Compiler & compiler )
 {
   expr->compile( compiler );
-
-  if( compiler.scopes.size() == 1 )
-  {
-    uint16_t index = compiler.define_var( name );
-    compiler.code->emit_instr( OP_STORE_GLOBAL, index );
-  }
-  else
-  {
-    uint16_t index = compiler.define_var( name );
-    compiler.code->emit_instr( OP_STORE_LOCAL, index );
-  }
+  uint16_t index = compiler.define_var( name );
+  bool global    = compiler.scopes.size() == 1;
+  compiler.code->emit_instr( global ? OP_STORE_GLOBAL : OP_STORE_LOCAL, index );
 }
 
 Assignment::Assignment( const std::string & name, Expr * expr )
@@ -206,14 +190,19 @@ Assignment::Assignment( const std::string & name, Expr * expr )
 void Assignment::compile( Compiler & compiler )
 {
   expr->compile( compiler );
-
   auto [index, is_global] = compiler.find_var( name );
-  if( is_global )
-  {
-    compiler.code->emit_instr( OP_STORE_GLOBAL, index );
-  }
-  else
-  {
-    compiler.code->emit_instr( OP_STORE_LOCAL, index );
-  }
+  compiler.code->emit_instr( is_global ? OP_STORE_GLOBAL : OP_STORE_LOCAL, index );
+}
+
+ClassDecl::ClassDecl( const std::string & name )
+    : name( name )
+{
+}
+
+void ClassDecl::compile( Compiler & compiler )
+{
+  ClassObject * cls = compiler.gc.alloc<ClassObject>( name.c_str() );
+  uint16_t index    = compiler.define_var( name );
+  compiler.code->emit_literal( Object::Class( cls ) );
+  compiler.code->emit_instr( OP_STORE_GLOBAL, index );
 }
