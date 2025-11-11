@@ -1,4 +1,4 @@
-set(SRC_FILES "tests.cpp")
+set(SRC_FILES "tests.cpp" "misc.cpp")
 
 add_executable(tests ${SRC_FILES})
 

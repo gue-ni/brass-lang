@@ -21,6 +21,7 @@ enum TokenType : uint
   SLASH,
   EQUAL,
   EQUAL_EQUAL,
+  DOT,
 
   KW_IF,
   KW_ELSE,

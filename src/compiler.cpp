@@ -62,3 +62,4 @@ uint16_t Compiler::define_var( const std::string & name )
     }
   }
 }
+

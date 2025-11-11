@@ -271,37 +271,49 @@ Result<Expr> Parser::parse_primary()
   {
     Variable * var = m_arena.alloc<Variable>( previous().lexeme );
 
-    if( !match( LPAREN ) )
+    if( match( LPAREN ) )
+    {
+      std::vector<Expr *> args;
+
+      do
+      {
+        if( peek().type == RPAREN )
+        {
+          break;
+        }
+
+        auto arg = parse_expr();
+        if( !arg.ok() )
+        {
+        }
+
+        args.push_back( arg.node );
+
+        ( void ) match( COMMA );
+      } while( !is_finished() );
+
+      if( !match( RPAREN ) )
+      {
+        return make_error<Expr>( "Expected ')'" );
+      }
+
+      Call * fn_call = m_arena.alloc<Call>( var, args );
+      return make_result<Expr>( fn_call );
+    }
+    else if( match( DOT ) )
+    {
+      if (!match(IDENTIFIER)) {
+        return make_error<Expr>( "expected identifier" );
+      }
+
+      std::string name = previous().lexeme;
+      Get * get = m_arena.alloc<Get>( var, name );
+      return make_result<Expr>( get );
+    }
+    else
     {
       return make_result<Expr>( var );
     }
-
-    std::vector<Expr *> args;
-
-    do
-    {
-      if( peek().type == RPAREN )
-      {
-        break;
-      }
-
-      auto arg = parse_expr();
-      if( !arg.ok() )
-      {
-      }
-
-      args.push_back( arg.node );
-
-      ( void ) match( COMMA );
-    } while( !is_finished() );
-
-    if( !match( RPAREN ) )
-    {
-      return make_error<Expr>( "Expected ')'" );
-    }
-
-    Call * fn_call = m_arena.alloc<Call>( var, args );
-    return make_result<Expr>( fn_call );
   }
   else
   {

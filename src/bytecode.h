@@ -16,6 +16,8 @@ enum Instruction : uint8_t
   OP_LOAD_LOCAL,
   OP_STORE_LOCAL,
   OP_CALL,
+  OP_SET_PROPERTY,
+  OP_GET_PROPERTY,
   OP_RETURN,
   OP_ADD,
   OP_SUB,
@@ -25,12 +27,14 @@ enum Instruction : uint8_t
 
 struct CodeObject
 {
+  CodeObject* parent = nullptr;
   uint16_t num_locals = 0;
   std::vector<Object> literals;
   std::vector<uint8_t> instructions;
-  std::vector<std::string> names;
+  std::vector<std::string> names; // local names
   void emit_instr( Instruction );
   void emit_instr( Instruction, uint16_t );
   void emit_literal( Object );
   uint16_t emit_name( const std::string & name );
+  CodeObject* get_root();
 };

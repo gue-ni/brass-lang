@@ -100,8 +100,11 @@ void FnDecl::compile( Compiler & compiler )
 {
   FunctionObject * fn = compiler.gc.alloc<FunctionObject>( name.c_str(), ( uint8_t ) args.size() );
 
-  CodeObject * context = compiler.code;
-  compiler.code        = &fn->code_object;
+  CodeObject * global = compiler.code;
+
+  fn->code_object.parent = global;
+
+  compiler.code = &fn->code_object;
   compiler.push_scope();
 
   for( const std::string & arg : args )
@@ -112,7 +115,7 @@ void FnDecl::compile( Compiler & compiler )
   body->compile( compiler );
 
   compiler.pop_scope();
-  compiler.code = context;
+  compiler.code = global;
 
   uint16_t index = compiler.define_var( name );
   compiler.code->emit_literal( Object::Function( fn ) );
@@ -205,4 +208,20 @@ void ClassDecl::compile( Compiler & compiler )
   uint16_t index    = compiler.define_var( name );
   compiler.code->emit_literal( Object::Class( cls ) );
   compiler.code->emit_instr( OP_STORE_GLOBAL, index );
+}
+
+Get::Get( Expr * object, const std::string & name )
+    : object( object )
+    , name( name )
+{
+}
+
+void Get::compile( Compiler & compiler )
+{
+  object->compile( compiler );
+  // TODO: how do i get this index?
+  // cannot define the name local to the code object, as a getter can be called
+  // inside a function, which would not have access to those
+  uint16_t index = 0;
+  compiler.code->emit_instr( OP_GET_PROPERTY, index );
 }

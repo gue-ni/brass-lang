@@ -5,6 +5,7 @@
 
 #include "bytecode.h"
 #include "gc.h"
+#include "utils.h"
 
 class Object;
 
@@ -23,24 +24,23 @@ struct ListObject : public GarbageCollected
   size_t length;
 };
 
-struct MapObject : public GarbageCollected
+struct MapObject
+    : public GarbageCollected
+    , public HashMap<Object>
 {
-};
-
-struct ObjectObject : public GarbageCollected
-{
-  // TODO: add fields and a type
 };
 
 struct ClassObject : public GarbageCollected
 {
   char * name;
+  HashMap<Object> methods;
   ClassObject( const char * cl_name );
 };
 
 struct InstanceObject : public GarbageCollected
 {
   ClassObject * klass;
+  HashMap<Object> fields;
   InstanceObject( ClassObject * klass );
 };
 

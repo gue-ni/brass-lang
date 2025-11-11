@@ -1,6 +1,7 @@
 #include "vm.h"
 #include "object.h"
 #include <cassert>
+#include <iomanip>
 
 VirtualMachine::VirtualMachine( std::ostream & out, std::ostream & err, GarbageCollector & gc )
     : m_out( out )
@@ -27,7 +28,9 @@ int VirtualMachine::run( CodeObject * co )
         }
       case OP_LOAD_GLOBAL :
         {
-          std::string var = current_frame().code_object->names[arg];
+          CodeObject * global = current_frame().code_object->get_root();
+          assert( global != nullptr );
+          std::string var = global->names[arg];
           auto it         = m_globals.find( var );
           if( it != m_globals.end() )
           {
@@ -37,7 +40,9 @@ int VirtualMachine::run( CodeObject * co )
         }
       case OP_STORE_GLOBAL :
         {
-          std::string var = current_frame().code_object->names[arg];
+          CodeObject * global = current_frame().code_object->get_root();
+          assert( global != nullptr );
+          std::string var = global->names[arg];
           Object obj      = pop();
           m_globals[var]  = obj;
           break;
@@ -110,7 +115,8 @@ int VirtualMachine::run( CodeObject * co )
           break;
         }
       default :
-        assert( false );
+        m_err << "Unhandled instruction: 0x" << std::hex << std::setw( 2 ) << std::setfill( '0' )
+              << static_cast<int>( instr ) << "\n";
         m_exit = true;
         break;
     }
@@ -145,6 +151,8 @@ std::pair<Instruction, uint16_t> VirtualMachine::next_instr()
     case OP_STORE_GLOBAL :
     case OP_LOAD_LOCAL :
     case OP_STORE_LOCAL :
+    case OP_GET_PROPERTY :
+    case OP_SET_PROPERTY :
       {
         uint8_t hi   = *( current_frame().ip++ );
         uint8_t lo   = *( current_frame().ip++ );

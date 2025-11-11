@@ -28,3 +28,13 @@ uint16_t CodeObject::emit_name( const std::string & name )
   names.push_back( name );
   return index;
 }
+
+CodeObject * CodeObject::get_root()
+{
+  CodeObject* current = this;
+  if (current->parent != nullptr)
+  {
+    current = current->parent;
+  }
+  return current;
+}

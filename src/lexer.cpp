@@ -191,6 +191,9 @@ void Lexer::run()
       case '~' :
         push_token( Token( TILDE, c ) );
         break;
+      case '.' :
+        push_token( Token( DOT, c ) );
+        break;
       case '*' :
         push_token( Token( STAR, c ) );
         break;

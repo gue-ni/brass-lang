@@ -179,6 +179,28 @@ print( foo(2, 3) );
   EXPECT_EQ( err.str(), "" );
 }
 
+#if 0
+TEST_F( Unittest, test_fn_01 )
+{
+  const char * src = R"(
+
+var d = 5;
+
+fn foo(a, b) {
+  var c = a + b;
+  return c + d;
+}
+
+println(foo(2, 3));
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "10" );
+  EXPECT_EQ( err.str(), "" );
+}
+#endif
+
 TEST_F( Unittest, test_block_01 )
 {
   const char * src = R"(
@@ -242,10 +264,28 @@ println(Foo);
 var f = Foo();
 
 println(f);
+
+
   )";
 
   ( void ) eval( src, out, err );
 
   EXPECT_EQ( out.str(), "class<Foo>\ninstance<Foo>\n" );
+  EXPECT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, test_class_02 )
+{
+  const char * src = R"(
+class Foo {
+}
+var foo = Foo();
+
+print(foo.bar);
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "" );
   EXPECT_EQ( err.str(), "" );
 }

@@ -124,3 +124,11 @@ struct ClassDecl : Stmt
   ClassDecl( const std::string & name );
   void compile( Compiler & compiler ) override;
 };
+
+struct Get : Expr
+{
+  std::string name;
+  Expr * object;
+  Get( Expr * object, const std::string & name );
+  void compile( Compiler & compiler ) override;
+};
