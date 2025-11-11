@@ -1,7 +1,7 @@
 #include "parser.h"
 #include <iostream>
 
-Parser::Parser( const std::vector<Token> & tokens, ArenaAllocator & arena )
+Parser::Parser( const std::vector<Token> & tokens, NodeAllocator & arena )
     : m_tokens( tokens )
     , m_pos( m_tokens.begin() )
     , m_arena( arena )
@@ -381,7 +381,7 @@ bool Parser::is_finished()
   return m_pos == m_tokens.end();
 }
 
-Result<Program> parse( const std::vector<Token> & tokens, ArenaAllocator & allocator )
+Result<Program> parse( const std::vector<Token> & tokens, NodeAllocator & allocator )
 {
   Parser parser( tokens, allocator );
   return parser.run();

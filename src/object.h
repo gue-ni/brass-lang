@@ -15,13 +15,18 @@ struct FunctionObject : public GarbageCollected
   uint8_t num_args = 0;
   CodeObject code_object;
   FunctionObject( const char * fn_name, uint8_t arity );
+  ~FunctionObject()
+  {
+    if (name)
+    {
+      free(name);
+      name = nullptr;
+    }
+  }
 };
 
 struct ListObject : public GarbageCollected
 {
-  Object * items;
-  size_t capacity;
-  size_t length;
 };
 
 struct MapObject
@@ -33,14 +38,21 @@ struct MapObject
 struct ClassObject : public GarbageCollected
 {
   char * name;
-  HashMap<Object> methods;
+  // HashMap<Object> methods;
   ClassObject( const char * cl_name );
+  ~ClassObject()
+  {
+    if (name) {
+      free(name);
+      name = nullptr;
+    }
+  }
 };
 
 struct InstanceObject : public GarbageCollected
 {
   ClassObject * klass;
-  HashMap<Object> fields;
+  // HashMap<Object> fields;
   InstanceObject( ClassObject * klass );
 };
 

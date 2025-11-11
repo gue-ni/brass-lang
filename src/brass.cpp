@@ -11,7 +11,7 @@ int eval( const char * src, std::ostream & out, std::ostream & err )
 {
   std::vector<Token> tokens = lex( src );
 
-  ArenaAllocator allocator( 4096 );
+  NodeAllocator allocator;
 
   Result<Program> result = parse( tokens, allocator );
 
@@ -39,7 +39,7 @@ std::string repl_header()
 
 int repl()
 {
-  ArenaAllocator allocator( 1024 );
+  NodeAllocator allocator;
 
   GarbageCollector gc;
 

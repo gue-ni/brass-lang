@@ -2,15 +2,18 @@
 
 #include "object.h"
 #include "utils.h"
+#include "allocator.h"
+#include "ast.h"
 
-TEST( misc, test_map_01 )
+TEST(misc, test_alloc_00)
 {
-  HashMap<Object> map;
+  NodeAllocator allocator;
+  auto* ast = allocator.alloc<DebugPrint>(allocator.alloc<Literal>(Object::Integer(5)));
+}
 
-  map.set( "foo", Object::Integer( 5 ) );
-  // EXPECT_EQ( map.contains( "foo" ), true );
-  // EXPECT_EQ( map.contains( "bar" ), false );
-
-  map.set( "bar", Object::String( "hello, world" ) );
-  // EXPECT_EQ( map.contains( "bar" ), true );
+TEST(misc, test_alloc_01)
+{
+  NodeAllocator allocator;
+  Program* prog = allocator.alloc<Program>();
+  prog->stmts.push_back(allocator.alloc<DebugPrint>(allocator.alloc<Literal>(Object::Integer(5))));
 }

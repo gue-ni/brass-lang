@@ -46,7 +46,7 @@ TEST_F( Unittest, test_001 )
 
 TEST_F( Unittest, test_002 )
 {
-  ArenaAllocator allocator( 1024 );
+  NodeAllocator allocator;
   Program * prog = allocator.alloc<Program>();
 
   Stmt * stmt_1 = allocator.alloc<DebugPrint>( allocator.alloc<Literal>( Object::Integer( 42 ) ) );
@@ -70,54 +70,6 @@ TEST_F( Unittest, test_002 )
   EXPECT_EQ( out.str(), "425" );
   EXPECT_EQ( err.str(), "" );
 }
-
-#if 0
-TEST_F( Unittest, test_003 )
-{
-  const char * src = R"(
-fn add(a, b) {
-  return a + b;
-}
-
-x = add(2, 3);
-
-print(x);
-)";
-
-  GarbageCollector gc;
-
-  // CodeObject func;
-  FunctionObject * fn = gc.alloc<FunctionObject>( "add", 2 );
-  fn->code_object.emit_instr( OP_LOAD_LOCAL, 0 ); // a
-  fn->code_object.emit_instr( OP_LOAD_LOCAL, 1 ); // b
-  fn->code_object.emit_instr( OP_ADD );
-  fn->code_object.emit_instr( OP_RETURN );
-
-  CodeObject code;
-  code.names.push_back( "add" );
-  code.names.push_back( "x" );
-  code.emit_literal( Object::Function( fn ) );
-  code.emit_instr( OP_MAKE_FUNCTION );
-  code.emit_instr( OP_STORE_GLOBAL, 0 );
-
-  code.emit_literal( Object::Integer( 2 ) );
-  code.emit_literal( Object::Integer( 3 ) );
-  code.emit_instr( OP_LOAD_GLOBAL, 0 ); // add
-  code.emit_instr( OP_CALL_FUNCTION );
-  code.emit_instr( OP_STORE_GLOBAL, 1 ); // x
-
-  code.emit_instr( OP_LOAD_GLOBAL, 1 ); // x
-  code.emit_instr( OP_DEBUG_PRINT );
-
-  VirtualMachine vm( out, err, gc );
-
-  int r = vm.run( &code );
-
-  EXPECT_EQ( r, 0 );
-  EXPECT_EQ( out.str(), "5" );
-  EXPECT_EQ( err.str(), "" );
-}
-#endif
 
 TEST_F( Unittest, test_005 )
 {
@@ -162,7 +114,7 @@ print(x);
   EXPECT_EQ( err.str(), "" );
 }
 
-TEST_F( Unittest, test_block_02 )
+TEST_F( Unittest, test_fn_00 )
 {
   const char * src = R"(
 fn foo(a, b) {
@@ -179,7 +131,6 @@ print( foo(2, 3) );
   EXPECT_EQ( err.str(), "" );
 }
 
-#if 0
 TEST_F( Unittest, test_fn_01 )
 {
   const char * src = R"(
@@ -191,7 +142,7 @@ fn foo(a, b) {
   return c + d;
 }
 
-println(foo(2, 3));
+print(foo(2, 3));
   )";
 
   ( void ) eval( src, out, err );
@@ -199,7 +150,6 @@ println(foo(2, 3));
   EXPECT_EQ( out.str(), "10" );
   EXPECT_EQ( err.str(), "" );
 }
-#endif
 
 TEST_F( Unittest, test_block_01 )
 {

@@ -7,6 +7,7 @@
 
 struct AstNode
 {
+  virtual ~AstNode() {}
   virtual void compile( Compiler & );
 };
 
@@ -132,3 +133,31 @@ struct Get : Expr
   Get( Expr * object, const std::string & name );
   void compile( Compiler & compiler ) override;
 };
+
+
+// basic allocator, should be replaced by a arena allocator
+// arena allocator does not allow me to use stl containers
+class NodeAllocator
+{
+  public:
+  NodeAllocator() {}
+  ~NodeAllocator() {
+    for (AstNode* node : m_nodes)
+    {
+      delete node;
+    }
+    m_nodes.clear();
+  }
+
+  template <typename T, typename... Args>
+  T * alloc( Args &&... args )
+  {
+    T* ptr = new T( std::forward<Args>( args )... );
+    m_nodes.push_back(ptr);
+    return ptr;
+  }
+
+private:
+  std::list<AstNode*> m_nodes;
+};
+

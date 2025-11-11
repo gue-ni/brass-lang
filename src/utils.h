@@ -1,11 +1,13 @@
 #pragma once
 
+#include <cstring>
+
 using uint = unsigned int;
 
 #ifdef WIN32
-#define STRDUP _strdup
+#define STRDUP(x) _strdup(x)
 #else
-#define STRDUP strdup
+#define STRDUP(x) strdup(x)
 #endif
 
 template <typename T>

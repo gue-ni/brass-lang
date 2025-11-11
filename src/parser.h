@@ -37,13 +37,13 @@ Result<T> make_error( const std::string & error )
 class Parser
 {
 public:
-  Parser( const std::vector<Token> & tokens, ArenaAllocator & arena );
+  Parser( const std::vector<Token> & tokens, NodeAllocator & arena );
   Result<Program> run();
 
 private:
   const std::vector<Token> m_tokens;
   std::vector<Token>::const_iterator m_pos;
-  ArenaAllocator & m_arena;
+  NodeAllocator & m_arena;
 
   Result<Program> parse_program();
   Result<Stmt> parse_stmt();
@@ -63,4 +63,4 @@ private:
   bool is_finished();
 };
 
-Result<Program> parse( const std::vector<Token> & tokens, ArenaAllocator & allocator );
+Result<Program> parse( const std::vector<Token> & tokens, NodeAllocator & allocator );
