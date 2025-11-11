@@ -1,12 +1,10 @@
 #include "compiler.h"
 #include "ast.h"
 
-CodeObject* compile( AstNode * ast, GarbageCollector & gc )
+void compile( AstNode * ast, GarbageCollector & gc, CodeObject * code )
 {
-  CodeObject * code = new CodeObject;
   Compiler compiler( gc, code );
   ast->compile( compiler );
-  return code;
 }
 
 void Compiler::push_scope()
@@ -62,4 +60,3 @@ uint16_t Compiler::define_var( const std::string & name )
     }
   }
 }
-

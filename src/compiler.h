@@ -31,4 +31,4 @@ struct Compiler
   uint16_t define_var( const std::string & name );
 };
 
-CodeObject* compile( AstNode *, GarbageCollector & gc );
+void compile( AstNode *, GarbageCollector & gc, CodeObject * );
