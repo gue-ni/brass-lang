@@ -28,35 +28,51 @@ int VirtualMachine::run( CodeObject * co )
         }
       case OP_LOAD_GLOBAL :
         {
-          CodeObject * global = current_frame().code_object->get_root();
+          CodeObject * current = current_frame().code_object;
+          CodeObject * global  = current->get_root(); // something is not right here
+
           assert( global != nullptr );
-          std::string var = global->names[arg];
+          assert( arg < global->names.size() );
+
+          std::string var = global->names[arg]; // this throws an error
           auto it         = m_globals.find( var );
           if( it != m_globals.end() )
           {
             push( it->second );
           }
+          else
+          {
+            push( Object::Nil() );
+          }
           break;
         }
       case OP_STORE_GLOBAL :
         {
-          CodeObject * global = current_frame().code_object->get_root();
+          CodeObject * current = current_frame().code_object;
+          CodeObject * global  = current->get_root();
+
           assert( global != nullptr );
+          assert( arg < global->names.size() );
+
           std::string var = global->names[arg];
-          Object obj      = pop();
+          Object obj      = pop(); // when we get the function with pop it is corrupted
           m_globals[var]  = obj;
           break;
         }
       case OP_LOAD_LOCAL :
         {
-          Object obj = m_stack[current_frame().bp + arg];
+          size_t slot = current_frame().bp + arg;
+          assert( slot < m_stack.size() );
+          Object obj = m_stack[slot];
           push( obj );
           break;
         }
       case OP_STORE_LOCAL :
         {
-          Object obj                        = pop();
-          m_stack[current_frame().bp + arg] = obj;
+          Object obj  = pop();
+          size_t slot = current_frame().bp + arg;
+          assert( slot < m_stack.size() );
+          m_stack[slot] = obj;
           break;
         }
       case OP_ADD :

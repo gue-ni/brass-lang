@@ -98,11 +98,10 @@ FnDecl::FnDecl( const std::string & name, const std::vector<std::string> & args,
 
 void FnDecl::compile( Compiler & compiler )
 {
-  FunctionObject * fn = compiler.gc.alloc<FunctionObject>( name.c_str(), ( uint8_t ) args.size() );
 
   CodeObject * global = compiler.code;
 
-  fn->code_object.parent = global;
+  FunctionObject * fn = compiler.gc.alloc<FunctionObject>( name.c_str(), ( uint8_t ) args.size(), global );
 
   compiler.code = &fn->code_object;
   compiler.push_scope();

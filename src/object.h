@@ -14,7 +14,7 @@ struct FunctionObject : public GarbageCollected
   char * name;
   uint8_t num_args = 0;
   CodeObject code_object;
-  FunctionObject( const char * fn_name, uint8_t arity );
+  FunctionObject( const char * fn_name, uint8_t arity, CodeObject* ctx );
   ~FunctionObject()
   {
     if (name)
@@ -74,6 +74,10 @@ public:
   };
 
   Object();
+  Object(const Object& );
+  Object& operator=(const Object& other);
+
+
   static Object Nil();
   static Object Boolean( bool );
   static Object Integer( int );
@@ -96,6 +100,9 @@ public:
     ClassObject * klass;
     InstanceObject * instance;
   };
+
+  private:
+        void copy_from(const Object& );
 };
 
 std::ostream & operator<<( std::ostream &, const Object & );

@@ -137,6 +137,25 @@ TEST_F( Unittest, test_fn_01 )
 
 var d = 5;
 
+fn foo(a) {
+  return a + d;
+}
+
+print(foo(2));
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "7" );
+  EXPECT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, test_fn_02 )
+{
+  const char * src = R"(
+
+var d = 5;
+
 fn foo(a, b) {
   var c = a + b;
   return c + d;

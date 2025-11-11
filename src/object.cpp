@@ -8,6 +8,20 @@ Object::Object()
 {
 }
 
+Object::Object( const Object & other)
+{
+  copy_from(other);
+}
+
+Object & Object::operator=( const Object & other )
+{
+  if (this != &other)
+  {
+    copy_from(other);
+  }
+  return *this;
+}
+
 Object Object::Nil()
 {
   return Object();
@@ -69,10 +83,26 @@ Object Object::Instance( InstanceObject * i )
   return obj;
 }
 
-FunctionObject::FunctionObject( const char * fn_name, uint8_t arity )
+void Object::copy_from( const Object & other )
+{
+  type = other.type;
+  switch (type) {
+    case INTEGER :
+      integer = other.integer;
+      break;
+    case FUNCTION :
+      function = other.function;
+      break;
+      default :
+        assert(false);
+  }
+}
+
+FunctionObject::FunctionObject( const char * fn_name, uint8_t arity, CodeObject* ctx )
     : name( STRDUP( fn_name ) )
     , num_args( arity )
 {
+  code_object.parent = ctx;
 }
 
 ClassObject::ClassObject( const char * cl_name )
@@ -119,3 +149,5 @@ std::ostream & operator<<( std::ostream & os, const Object & obj )
   }
   return os;
 }
+
+
