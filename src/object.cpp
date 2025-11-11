@@ -8,20 +8,6 @@ Object::Object()
 {
 }
 
-Object::Object( const Object & other)
-{
-  copy_from(other);
-}
-
-Object & Object::operator=( const Object & other )
-{
-  if (this != &other)
-  {
-    copy_from(other);
-  }
-  return *this;
-}
-
 Object Object::Nil()
 {
   return Object();
