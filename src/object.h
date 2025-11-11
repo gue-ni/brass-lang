@@ -74,9 +74,6 @@ public:
   };
 
   Object();
-  Object(const Object& );
-  Object& operator=(const Object& other);
-
 
   static Object Nil();
   static Object Boolean( bool );
