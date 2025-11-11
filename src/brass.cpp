@@ -23,11 +23,13 @@ int eval( const char * src, std::ostream & out, std::ostream & err )
 
   GarbageCollector gc;
 
-  CodeObject code = compile( result.node, gc );
+  CodeObject *code = compile( result.node, gc );
 
   VirtualMachine vm( out, err, gc );
 
-  return vm.run( &code );
+  int r = vm.run( code );
+  delete code;
+  return r;
 }
 
 std::string repl_header()

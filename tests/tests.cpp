@@ -60,11 +60,11 @@ TEST_F( Unittest, test_002 )
 
   GarbageCollector gc;
 
-  CodeObject code = compile( prog, gc );
+  CodeObject * code = compile( prog, gc );
 
   VirtualMachine vm( out, err, gc );
 
-  int r = vm.run( &code );
+  int r = vm.run( code );
 
   EXPECT_EQ( r, 0 );
   EXPECT_EQ( out.str(), "425" );
