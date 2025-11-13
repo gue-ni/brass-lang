@@ -24,7 +24,7 @@ Result<Program> Parser::parse_program()
 
   do
   {
-    auto result = parse_stmt();
+    auto result = parse_declaration();
     if( !result.ok() )
     {
       return make_error<Program>( result.error );
@@ -36,13 +36,13 @@ Result<Program> Parser::parse_program()
   return make_result( prog );
 }
 
+#if 0
 Result<Stmt> Parser::parse_stmt()
 {
   bool expect_semicolon = true;
   Stmt * stmt           = nullptr;
   if( match( KW_PRINT ) || match( KW_PRINTLN ) )
   {
-
     bool newline = previous().type == KW_PRINTLN ? true : false;
 
     if( !match( LPAREN ) )
@@ -61,68 +61,14 @@ Result<Stmt> Parser::parse_stmt()
       return make_error<Stmt>( "Expected ')'" );
     }
 
-    stmt = m_arena.alloc<DebugPrint>( expr.node, newline );
+    stmt = m_arena.alloc<Print>( expr.node, newline );
   }
   else if( match( KW_FN ) )
   {
-    if( !match( IDENTIFIER ) )
-    {
-      return make_error<Stmt>( "Expected identifier after 'fn'" );
-    }
-
-    std::string fn_name = previous().lexeme;
-
-    if( !match( LPAREN ) )
-    {
-      return make_error<Stmt>( "Expected '('" );
-    }
-
-    std::vector<std::string> args;
-
-    do
-    {
-      if( peek().type == RPAREN )
-      {
-        break;
-      }
-
-      if( !match( IDENTIFIER ) )
-      {
-        return make_error<Stmt>( "Expected identifier" );
-      }
-
-      args.push_back( previous().lexeme );
-
-      ( void ) match( COMMA );
-    } while( !is_finished() );
-
-    if( !match( RPAREN ) )
-    {
-      return make_error<Stmt>( "Expected ')'" );
-    }
-
-    if( !match( LBRACE ) )
-    {
-      return make_error<Stmt>( "Expected '{'" );
-    }
-
-    auto body = parse_block();
-    if( !body.ok() )
-    {
-      return make_error<Stmt>( body.error );
-    }
-
-    if( !match( RBRACE ) )
-    {
-      return make_error<Stmt>( "Expected '}'" );
-    }
-
-    stmt             = m_arena.alloc<FnDecl>( fn_name, args, body.node );
-    expect_semicolon = false;
+    return parse_fn_decl();
   }
   else if( match( KW_RETURN ) )
   {
-    // TODO
     Result<Expr> expr = parse_expr();
     if( !expr.ok() )
     {
@@ -221,37 +167,204 @@ Result<Stmt> Parser::parse_stmt()
 
   return make_result( stmt );
 }
+#endif
 
-Result<FnDecl> Parser::parse_fn_decl()
+Result<Stmt> Parser::parse_statement()
 {
-  return make_error<FnDecl>( "not impelmented" );
+  if( match( KW_PRINT ) || match( KW_PRINTLN ) )
+  {
+    bool newline = previous().type == KW_PRINTLN ? true : false;
+
+    Result<Expr> expr = parse_expr();
+    if( !expr.ok() )
+      return make_error<Stmt>( expr.error );
+
+    if( !match( SEMICOLON ) )
+      return make_error<Stmt>( "Expected ';' after 'print' statement" );
+
+    return make_result<Stmt>( m_arena.alloc<Print>( expr.node, newline ) );
+  }
+  else if( match( KW_RETURN ) )
+  {
+    Result<Expr> expr = parse_expr();
+    if( !expr.ok() )
+      return make_error<Stmt>( expr.error );
+
+    if( !match( SEMICOLON ) )
+      return make_error<Stmt>( "Expected ';' after 'return' statement" );
+
+    return make_result<Stmt>( m_arena.alloc<Return>( expr.node ) );
+  }
+  else if( match( KW_IF ) )
+  {
+    return make_error<Stmt>( "'if' not implemented" );
+  }
+  else if( match( KW_WHILE ) )
+  {
+    return make_error<Stmt>( "'while' not implemented" );
+  }
+  else if( match( LBRACE ) )
+  {
+    return parse_block();
+  }
+  else
+  {
+    return parse_expr_stmt();
+  }
 }
 
-Result<ClassDecl> Parser::parse_class_decl()
+Result<Stmt> Parser::parse_fn_decl()
 {
-  return make_error<ClassDecl>( "not impelmented" );
+  if( !match( IDENTIFIER ) )
+  {
+    return make_error<Stmt>( "Expected identifier after 'fn'" );
+  }
+
+  std::string fn_name = previous().lexeme;
+
+  if( !match( LPAREN ) )
+  {
+    return make_error<Stmt>( "Expected '('" );
+  }
+
+  std::vector<std::string> args;
+
+  do
+  {
+    if( peek().type == RPAREN )
+      break;
+
+    if( !match( IDENTIFIER ) )
+      return make_error<Stmt>( "Expected identifier" );
+
+    args.push_back( previous().lexeme );
+
+    ( void ) match( COMMA );
+  } while( !is_finished() );
+
+  if( !match( RPAREN ) )
+    return make_error<Stmt>( "Expected ')'" );
+
+  if( !match( LBRACE ) )
+    return make_error<Stmt>( "Expected '{'" );
+
+  auto body = parse_block();
+  if( !body.ok() )
+    return make_error<Stmt>( body.error );
+
+  return make_result<Stmt>( m_arena.alloc<FnDecl>( fn_name, args, body.node ) );
 }
 
-Result<Block> Parser::parse_block()
+Result<Stmt> Parser::parse_var_decl()
+{
+  if( !match( IDENTIFIER ) )
+    return make_error<Stmt>( "Expected identifier in variable declaration" );
+
+  std::string name = previous().lexeme;
+
+  if( !match( EQUAL ) )
+    return make_error<Stmt>( "Expected '=' in variable declaration" );
+
+  auto expr = parse_expression();
+  if( !expr.ok() )
+    return make_error<Stmt>( expr.error );
+
+  if( !match( SEMICOLON ) )
+    return make_error<Stmt>( "Expected ';' after variable declaration" );
+
+  return make_result<Stmt>( m_arena.alloc<VariableDecl>( name, expr.node ) );
+}
+
+Result<Expr> Parser::parse_assignment()
+{
+  auto expr = parse_term();
+  if( !expr.ok() )
+    return make_error<Expr>( expr.error );
+
+  if( match( EQUAL ) )
+  {
+    auto value = parse_assignment();
+
+    Variable * var = dynamic_cast<Variable *>( expr.node );
+
+    if( var )
+    {
+
+      return make_result<Expr>( m_arena.alloc<Assignment>( var->name, value.node ) );
+    }
+    else
+    {
+      return make_error<Expr>( "something went wrong" );
+    }
+
+    return make_error<Expr>( "assigment not impelmented" );
+  }
+  else
+  {
+    return expr;
+  }
+}
+
+Result<Stmt> Parser::parse_declaration()
+{
+  if( match( KW_CLASS ) )
+  {
+    return make_error<Stmt>( "class not impelmented" );
+  }
+  else if( match( KW_FN ) )
+  {
+    return parse_fn_decl();
+  }
+  else if( match( KW_VAR ) )
+  {
+    return parse_var_decl();
+  }
+  else
+  {
+    return parse_statement();
+  }
+}
+
+Result<Stmt> Parser::parse_class_decl()
+{
+  return make_error<Stmt>( "not impelmented" );
+}
+
+Result<Stmt> Parser::parse_block()
 {
   Block * block = m_arena.alloc<Block>();
   do
   {
-    if( peek().type == RBRACE )
-    {
+    if( match( RBRACE ) )
       break;
-    }
 
-    auto result = parse_stmt();
-    if( !result.ok() )
-    {
-      return make_error<Block>( result.error );
-    }
+    auto stmt = parse_declaration();
 
-    block->stmts.push_back( result.node );
+    if( !stmt.ok() )
+      return make_error<Stmt>( stmt.error );
+
+    block->stmts.push_back( stmt.node );
   } while( !is_finished() );
 
-  return make_result( block );
+  return make_result<Stmt>( block );
+}
+
+Result<Stmt> Parser::parse_expr_stmt()
+{
+  auto expr = parse_expression();
+
+  if( !expr.ok() )
+    return make_error<Stmt>( expr.error );
+
+  if( !match( SEMICOLON ) )
+    return make_error<Stmt>( "Expected ';' after expression" );
+
+  return make_result<Stmt>( m_arena.alloc<ExprStmt>( expr.node ) );
+}
+
+Result<Expr> Parser::parse_expression()
+{
+  return parse_assignment();
 }
 
 Result<Expr> Parser::parse_expr()
@@ -335,10 +448,10 @@ Result<Expr> Parser::parse_term()
   {
     std::string op = previous().lexeme;
     auto right     = parse_factor();
+
     if( !right.ok() )
-    {
       return make_error<Expr>( right.error );
-    }
+
     expr = m_arena.alloc<Binary>( op, left.node, right.node );
   }
   else

@@ -54,13 +54,13 @@ void Binary::compile( Compiler & compiler )
   compiler.code->emit_instr( instr );
 }
 
-DebugPrint::DebugPrint( Expr * expr, bool newline )
+Print::Print( Expr * expr, bool newline )
     : expr( expr )
     , newline( newline )
 {
 }
 
-void DebugPrint::compile( Compiler & compiler )
+void Print::compile( Compiler & compiler )
 {
   expr->compile( compiler );
   compiler.code->emit_instr( newline ? OP_PRINTLN : OP_PRINT );
@@ -235,4 +235,14 @@ void Set::compile( Compiler & compiler )
   object->compile( compiler );
   uint16_t index = compiler.define_global_var( property );
   compiler.code->emit_instr( OP_SET_PROPERTY, index );
+}
+
+ExprStmt::ExprStmt( Expr * expr )
+    : expr( expr )
+{
+}
+
+void ExprStmt::compile( Compiler & compiler )
+{
+  expr->compile( compiler );
 }

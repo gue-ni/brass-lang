@@ -18,7 +18,7 @@ protected:
 TEST_F( Unittest, test_000 )
 {
   const char * src = R"(
-print(2 + 3);
+print 2 + 3;
   )";
   int r            = eval( src, out, err );
   EXPECT_EQ( r, 0 );
@@ -26,30 +26,10 @@ print(2 + 3);
   EXPECT_EQ( err.str(), "" );
 }
 
-TEST_F( Unittest, test_001 )
-{
-  CodeObject code;
-  code.emit_literal( Object::Integer( 2 ) );
-  code.emit_literal( Object::Integer( 3 ) );
-  code.emit_instr( OP_ADD );
-  code.emit_instr( OP_PRINT );
-
-  GarbageCollector gc;
-  VirtualMachine vm( out, err, gc );
-
-  int r = vm.run( &code );
-
-  EXPECT_EQ( r, 0 );
-  EXPECT_EQ( out.str(), "5" );
-  EXPECT_EQ( err.str(), "" );
-}
-
-
-
 TEST_F( Unittest, test_005 )
 {
   const char * src = R"(
-print(42);
+print 45 - 3;
   )";
 
   int r = eval( src, out, err );
@@ -59,14 +39,14 @@ print(42);
   EXPECT_EQ( err.str(), "" );
 }
 
-TEST_F( Unittest, test_fn_decl )
+TEST_F( Unittest, test_fn_03 )
 {
   const char * src = R"(
 fn meaning_of_life() {
   return 42;
 }
 
-print(meaning_of_life());
+print meaning_of_life();
   )";
 
   ( void ) eval( src, out, err );
@@ -75,12 +55,12 @@ print(meaning_of_life());
   EXPECT_EQ( err.str(), "" );
 }
 
-TEST_F( Unittest, test_var_decl )
+TEST_F( Unittest, test_var_decl_01 )
 {
   const char * src = R"(
 var x = 2 + 3;
 
-print(x);
+print x;
   )";
 
   ( void ) eval( src, out, err );
@@ -97,7 +77,7 @@ fn foo(a, b) {
   return c;
 }
 
-print( foo(2, 3) );
+print foo(2, 3);
   )";
 
   ( void ) eval( src, out, err );
@@ -116,7 +96,7 @@ fn foo(a) {
   return a + d;
 }
 
-print(foo(2));
+print foo(2);
   )";
 
   ( void ) eval( src, out, err );
@@ -136,7 +116,7 @@ fn foo(a, b) {
   return c + d;
 }
 
-print(foo(2, 3));
+print foo(2, 3);
   )";
 
   ( void ) eval( src, out, err );
@@ -149,10 +129,10 @@ TEST_F( Unittest, test_block_01 )
 {
   const char * src = R"(
 var a = 1;
-print(a);
+print a;
 {
   var b = 2;
-  print(b);
+  print b;
 }
   )";
 
@@ -166,21 +146,21 @@ TEST_F( Unittest, test_block_03 )
 {
   const char * src = R"(
 var a = 1;
-print(a);
+print a;
 {
   var b = 2;
-  print(b);
+  print b;
   {
     var c = b + 1;
-    print(c);
+    print c;
 
     a = b + c;
 
     b = b + 2;
-    print(b);
+    print b;
   }
 }
-print(a);
+print a;
   )";
 
   ( void ) eval( src, out, err );
@@ -192,7 +172,7 @@ print(a);
 TEST_F( Unittest, test_binary_01 )
 {
   const char * src = R"(
-print(3 - 5);
+print 3 - 5;
   )";
 
   ( void ) eval( src, out, err );
@@ -206,11 +186,11 @@ TEST_F( Unittest, test_class_01 )
   const char * src = R"(
 class Foo {}
 
-println(Foo);
+println Foo;
 
 var f = Foo();
 
-println(f);
+println f;
 
 
   )";
@@ -226,11 +206,11 @@ TEST_F( Unittest, test_assignment_01 )
   const char * src = R"(
 var x = 2;
 
-print(x);
+print x;
 
 x = x + 1;
 
-print(x);
+print x;
   )";
 
   ( void ) eval( src, out, err );
@@ -246,7 +226,7 @@ class Foo {}
 
 var foo = Foo();
 
-print(foo.bar);
+print foo.bar;
   )";
 
   ( void ) eval( src, out, err );
@@ -264,7 +244,7 @@ var foo = Foo();
 
 foo.bar = 5;
 
-print(foo.bar);
+print foo.bar;
   )";
 
   ( void ) eval( src, out, err );
