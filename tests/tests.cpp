@@ -17,23 +17,35 @@ protected:
 
 TEST_F( Unittest, test_000 )
 {
-  const char * src = R"(
-print 2 + 3;
-  )";
+  const char * src = "print 2 + 3;";
   int r            = eval( src, out, err );
   EXPECT_EQ( r, 0 );
   EXPECT_EQ( out.str(), "5" );
   EXPECT_EQ( err.str(), "" );
 }
 
+TEST_F( Unittest, test_001 )
+{
+  const char * src = "print 1 + 2 + 3;";
+  int r            = eval( src, out, err );
+  EXPECT_EQ( r, 0 );
+  EXPECT_EQ( out.str(), "6" );
+  EXPECT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, test_002 )
+{
+  const char * src = "print 1 + 2 * 3 + 4;";
+  int r            = eval( src, out, err );
+  EXPECT_EQ( r, 0 );
+  EXPECT_EQ( out.str(), "11" );
+  EXPECT_EQ( err.str(), "" );
+}
+
 TEST_F( Unittest, test_005 )
 {
-  const char * src = R"(
-print 45 - 3;
-  )";
-
-  int r = eval( src, out, err );
-
+  const char * src = "print 45 - 3;";
+  int r            = eval( src, out, err );
   EXPECT_EQ( r, 0 );
   EXPECT_EQ( out.str(), "42" );
   EXPECT_EQ( err.str(), "" );
@@ -59,7 +71,6 @@ TEST_F( Unittest, test_var_decl_01 )
 {
   const char * src = R"(
 var x = 2 + 3;
-
 print x;
   )";
 
@@ -89,7 +100,6 @@ print foo(2, 3);
 TEST_F( Unittest, test_fn_01 )
 {
   const char * src = R"(
-
 var d = 5;
 
 fn foo(a) {
@@ -108,7 +118,6 @@ print foo(2);
 TEST_F( Unittest, test_fn_02 )
 {
   const char * src = R"(
-
 var d = 5;
 
 fn foo(a, b) {
@@ -256,22 +265,22 @@ print foo.bar;
 TEST_F( Unittest, test_class_04 )
 {
   const char * src = R"(
-class Vec2 {}
+class Square {}
 
-var vec = Vec2();
+var sq = Square();
 
-vec.x = 2;
-vec.y = 3;
+sq.w = 2;
+sq.h = 3;
 
-fn sum(v) {
-  return v.x + v.y;
+fn area(s) {
+  return s.w * s.h;
 }
 
-print sum(vec);
+print area(sq);
   )";
 
   ( void ) eval( src, out, err );
 
-  EXPECT_EQ( out.str(), "5" );
+  EXPECT_EQ( out.str(), "6" );
   EXPECT_EQ( err.str(), "" );
 }

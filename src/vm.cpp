@@ -78,7 +78,10 @@ int VirtualMachine::run( CodeObject * co )
         {
           Object obj  = pop();
           size_t slot = current_frame().bp + arg;
-          assert( slot < m_stack.size() );
+          if( !( slot < m_stack.size() ) )
+          {
+            RUNTIME_ERROR( "Variable not declard" );
+          }
           m_stack[slot] = obj;
           break;
         }
@@ -95,6 +98,28 @@ int VirtualMachine::run( CodeObject * co )
           Object lhs    = pop();
           Object rhs    = pop();
           Object result = Object::Integer( lhs.integer - rhs.integer );
+          push( result );
+          break;
+          break;
+        }
+      case OP_MULT :
+        {
+          Object lhs    = pop();
+          Object rhs    = pop();
+          Object result = Object::Integer( lhs.integer * rhs.integer );
+          push( result );
+          break;
+          break;
+        }
+      case OP_DIV :
+        {
+          Object lhs = pop();
+          Object rhs = pop();
+          if( rhs.integer == 0 )
+          {
+            RUNTIME_ERROR( "Division by zero" );
+          }
+          Object result = Object::Integer( lhs.integer / rhs.integer );
           push( result );
           break;
           break;
@@ -162,13 +187,13 @@ int VirtualMachine::run( CodeObject * co )
 
           Object obj      = pop();
           Object property = pop();
-          if (obj.type == Object::Type::INSTANCE)
+          if( obj.type == Object::Type::INSTANCE )
           {
-            obj.instance->fields.set(name.c_str(), property);
+            obj.instance->fields.set( name.c_str(), property );
           }
           else
           {
-            RUNTIME_ERROR("asdf");
+            RUNTIME_ERROR( "asdf" );
           }
           break;
         }

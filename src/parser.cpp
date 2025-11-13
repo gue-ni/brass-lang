@@ -11,16 +11,6 @@ Parser::Parser( const std::vector<Token> & tokens, NodeAllocator & arena )
 
 Result<Program> Parser::run()
 {
-  return parse_program();
-}
-
-const Token & Parser::previous()
-{
-  return *( m_pos - 1 );
-}
-
-Result<Program> Parser::parse_program()
-{
   Program * prog = m_arena.alloc<Program>();
 
   do
@@ -169,6 +159,58 @@ Result<Expr> Parser::parse_assignment()
   }
 }
 
+Result<Expr> Parser::parse_call()
+{
+  auto expr = parse_primary();
+  if( !expr.ok() )
+    return make_error<Expr>( expr.error );
+
+  if( match( LPAREN ) )
+  {
+    std::vector<Expr *> args;
+
+    do
+    {
+      if( peek().type == RPAREN )
+      {
+        break;
+      }
+
+      auto arg = parse_expr();
+      if( !arg.ok() )
+      {
+      }
+
+      args.push_back( arg.node );
+
+      ( void ) match( COMMA );
+    } while( !is_finished() );
+
+    if( !match( RPAREN ) )
+    {
+      return make_error<Expr>( "Expected ')'" );
+    }
+
+    Call * fn_call = m_arena.alloc<Call>( expr.node, args );
+    return make_result<Expr>( fn_call );
+  }
+  else if( match( DOT ) )
+  {
+    if( !match( IDENTIFIER ) )
+    {
+      return make_error<Expr>( "expected identifier" );
+    }
+
+    std::string name = previous().lexeme;
+    Get * get        = m_arena.alloc<Get>( expr.node, name );
+    return make_result<Expr>( get );
+  }
+  else
+  {
+    return expr;
+  }
+}
+
 Result<Stmt> Parser::parse_declaration()
 {
   if( match( KW_CLASS ) )
@@ -258,51 +300,7 @@ Result<Expr> Parser::parse_primary()
   else if( match( IDENTIFIER ) )
   {
     Variable * var = m_arena.alloc<Variable>( previous().lexeme );
-
-    if( match( LPAREN ) )
-    {
-      std::vector<Expr *> args;
-
-      do
-      {
-        if( peek().type == RPAREN )
-        {
-          break;
-        }
-
-        auto arg = parse_expr();
-        if( !arg.ok() )
-        {
-        }
-
-        args.push_back( arg.node );
-
-        ( void ) match( COMMA );
-      } while( !is_finished() );
-
-      if( !match( RPAREN ) )
-      {
-        return make_error<Expr>( "Expected ')'" );
-      }
-
-      Call * fn_call = m_arena.alloc<Call>( var, args );
-      return make_result<Expr>( fn_call );
-    }
-    else if( match( DOT ) )
-    {
-      if( !match( IDENTIFIER ) )
-      {
-        return make_error<Expr>( "expected identifier" );
-      }
-
-      std::string name = previous().lexeme;
-      Get * get        = m_arena.alloc<Get>( var, name );
-      return make_result<Expr>( get );
-    }
-    else
-    {
-      return make_result<Expr>( var );
-    }
+    return make_result<Expr>( var );
   }
   else
   {
@@ -310,27 +308,41 @@ Result<Expr> Parser::parse_primary()
   }
 }
 
-Result<Expr> Parser::parse_term()
+Result<Expr> Parser::parse_unary()
 {
-  auto left = parse_factor();
-  if( !left.ok() )
-    return make_error<Expr>( left.error );
-
-  Expr * expr = nullptr;
-
-  if( match( PLUS ) || match( MINUS ) )
+#if 0
+  if( match( MINUS ) )
   {
     std::string op = previous().lexeme;
-    auto right     = parse_factor();
 
+    auto right     = parse_unary();
     if( !right.ok() )
       return make_error<Expr>( right.error );
 
-    expr = m_arena.alloc<Binary>( op, left.node, right.node );
+    return make_result<Expr>( right.node );
   }
-  else
+#endif
+
+  return parse_call();
+}
+
+Result<Expr> Parser::parse_term()
+{
+  auto res_expr = parse_factor();
+  if( !res_expr.ok() )
+    return make_error<Expr>( res_expr.error );
+
+  Expr * expr = res_expr.node;
+
+  while( match( PLUS ) || match( MINUS ) )
   {
-    expr = left.node;
+    std::string op = previous().lexeme;
+
+    auto right = parse_factor();
+    if( !right.ok() )
+      return make_error<Expr>( right.error );
+
+    expr = m_arena.alloc<Binary>( op, expr, right.node );
   }
 
   return make_result( expr );
@@ -338,7 +350,29 @@ Result<Expr> Parser::parse_term()
 
 Result<Expr> Parser::parse_factor()
 {
-  return parse_primary();
+  auto res_expr = parse_unary();
+  if( !res_expr.ok() )
+    return make_error<Expr>( res_expr.error );
+
+  Expr * expr = res_expr.node;
+
+  while( match( STAR ) || match( SLASH ) )
+  {
+    std::string op = previous().lexeme;
+
+    auto right = parse_unary();
+    if( !right.ok() )
+      return make_error<Expr>( right.error );
+
+    expr = m_arena.alloc<Binary>( op, expr, right.node );
+  }
+
+  return make_result( expr );
+}
+
+const Token & Parser::previous()
+{
+  return *( m_pos - 1 );
 }
 
 const Token & Parser::peek()

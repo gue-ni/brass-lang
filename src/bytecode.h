@@ -21,6 +21,8 @@ enum OpCode : uint8_t
   OP_RETURN,
   OP_ADD,
   OP_SUB,
+  OP_DIV,
+  OP_MULT,
   OP_PRINT,
   OP_PRINTLN,
   OP_JMP,

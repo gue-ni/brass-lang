@@ -46,6 +46,14 @@ void Binary::compile( Compiler & compiler )
   {
     instr = OP_SUB;
   }
+  else if( op == "*" )
+  {
+    instr = OP_MULT;
+  }
+  else if( op == "/" )
+  {
+    instr = OP_DIV;
+  }
   else
   {
     assert( false && "Unreachable" );
