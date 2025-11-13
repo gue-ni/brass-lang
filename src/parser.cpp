@@ -216,16 +216,12 @@ Result<Stmt> Parser::parse_statement()
 Result<Stmt> Parser::parse_fn_decl()
 {
   if( !match( IDENTIFIER ) )
-  {
     return make_error<Stmt>( "Expected identifier after 'fn'" );
-  }
 
   std::string fn_name = previous().lexeme;
 
   if( !match( LPAREN ) )
-  {
-    return make_error<Stmt>( "Expected '('" );
-  }
+    return make_error<Stmt>( "Expected '(' after function name" );
 
   std::vector<std::string> args;
 
@@ -249,6 +245,7 @@ Result<Stmt> Parser::parse_fn_decl()
     return make_error<Stmt>( "Expected '{'" );
 
   auto body = parse_block();
+
   if( !body.ok() )
     return make_error<Stmt>( body.error );
 
@@ -289,7 +286,6 @@ Result<Expr> Parser::parse_assignment()
 
     if( var )
     {
-
       return make_result<Expr>( m_arena.alloc<Assignment>( var->name, value.node ) );
     }
     else
@@ -309,7 +305,7 @@ Result<Stmt> Parser::parse_declaration()
 {
   if( match( KW_CLASS ) )
   {
-    return make_error<Stmt>( "class not impelmented" );
+    return parse_class_decl();
   }
   else if( match( KW_FN ) )
   {
@@ -327,7 +323,18 @@ Result<Stmt> Parser::parse_declaration()
 
 Result<Stmt> Parser::parse_class_decl()
 {
-  return make_error<Stmt>( "not impelmented" );
+  if( !match( IDENTIFIER ) )
+    return make_error<Stmt>( "Expected class name" );
+
+  std::string name = previous().lexeme;
+
+  if( !match( LBRACE ) )
+    return make_error<Stmt>( "Expected '{' after class name" );
+
+  if( !match( RBRACE ) )
+    return make_error<Stmt>( "Expected '}' after class declaration" );
+
+  return make_result<Stmt>( m_arena.alloc<ClassDecl>( name.c_str() ) );
 }
 
 Result<Stmt> Parser::parse_block()
@@ -437,12 +444,11 @@ Result<Expr> Parser::parse_primary()
 
 Result<Expr> Parser::parse_term()
 {
-  Expr * expr = nullptr;
-  auto left   = parse_factor();
+  auto left = parse_factor();
   if( !left.ok() )
-  {
     return make_error<Expr>( left.error );
-  }
+
+  Expr * expr = nullptr;
 
   if( match( PLUS ) || match( MINUS ) )
   {
