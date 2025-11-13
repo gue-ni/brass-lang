@@ -1,7 +1,7 @@
 #include <iostream>
+#include "brass.h"
 
 int main( int argc, char * argv[] )
 {
-  std::cout << "Welcome to Brass! (" << __DATE__ << " " << __TIME__ << ")" << std::endl;
-  return 0;
+  return brass(argc, argv);
 }

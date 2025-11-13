@@ -27,9 +27,9 @@ struct Compiler
 
   void push_scope();
   void pop_scope();
-  uint16_t find_in_scopes( const std::string & name );
   std::pair<uint16_t, bool> find_var( const std::string & name );
   uint16_t define_var( const std::string & name );
+  uint16_t define_global_var(const std::string& name);
 };
 
-CodeObject compile( AstNode *, GarbageCollector & gc );
+void compile( AstNode *, GarbageCollector & gc, CodeObject * );

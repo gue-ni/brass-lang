@@ -32,7 +32,7 @@ TEST_F( Unittest, test_001 )
   code.emit_literal( Object::Integer( 2 ) );
   code.emit_literal( Object::Integer( 3 ) );
   code.emit_instr( OP_ADD );
-  code.emit_instr( OP_DEBUG_PRINT );
+  code.emit_instr( OP_PRINT );
 
   GarbageCollector gc;
   VirtualMachine vm( out, err, gc );
@@ -46,7 +46,7 @@ TEST_F( Unittest, test_001 )
 
 TEST_F( Unittest, test_002 )
 {
-  ArenaAllocator allocator( 1024 );
+  NodeAllocator allocator;
   Program * prog = allocator.alloc<Program>();
 
   Stmt * stmt_1 = allocator.alloc<DebugPrint>( allocator.alloc<Literal>( Object::Integer( 42 ) ) );
@@ -54,13 +54,14 @@ TEST_F( Unittest, test_002 )
   prog->stmts.push_back( stmt_1 );
 
   Stmt * stmt_2 = allocator.alloc<DebugPrint>( allocator.alloc<Binary>(
-      allocator.alloc<Literal>( Object::Integer( 2 ) ), allocator.alloc<Literal>( Object::Integer( 3 ) ) ) );
+      "+", allocator.alloc<Literal>( Object::Integer( 2 ) ), allocator.alloc<Literal>( Object::Integer( 3 ) ) ) );
 
   prog->stmts.push_back( stmt_2 );
 
   GarbageCollector gc;
 
-  CodeObject code = compile( prog, gc );
+  CodeObject code;
+  compile( prog, gc, &code );
 
   VirtualMachine vm( out, err, gc );
 
@@ -70,54 +71,6 @@ TEST_F( Unittest, test_002 )
   EXPECT_EQ( out.str(), "425" );
   EXPECT_EQ( err.str(), "" );
 }
-
-#if 0
-TEST_F( Unittest, test_003 )
-{
-  const char * src = R"(
-fn add(a, b) {
-  return a + b;
-}
-
-x = add(2, 3);
-
-print(x);
-)";
-
-  GarbageCollector gc;
-
-  // CodeObject func;
-  FunctionObject * fn = gc.alloc<FunctionObject>( "add", 2 );
-  fn->code_object.emit_instr( OP_LOAD_LOCAL, 0 ); // a
-  fn->code_object.emit_instr( OP_LOAD_LOCAL, 1 ); // b
-  fn->code_object.emit_instr( OP_ADD );
-  fn->code_object.emit_instr( OP_RETURN );
-
-  CodeObject code;
-  code.names.push_back( "add" );
-  code.names.push_back( "x" );
-  code.emit_literal( Object::Function( fn ) );
-  code.emit_instr( OP_MAKE_FUNCTION );
-  code.emit_instr( OP_STORE_GLOBAL, 0 );
-
-  code.emit_literal( Object::Integer( 2 ) );
-  code.emit_literal( Object::Integer( 3 ) );
-  code.emit_instr( OP_LOAD_GLOBAL, 0 ); // add
-  code.emit_instr( OP_CALL_FUNCTION );
-  code.emit_instr( OP_STORE_GLOBAL, 1 ); // x
-
-  code.emit_instr( OP_LOAD_GLOBAL, 1 ); // x
-  code.emit_instr( OP_DEBUG_PRINT );
-
-  VirtualMachine vm( out, err, gc );
-
-  int r = vm.run( &code );
-
-  EXPECT_EQ( r, 0 );
-  EXPECT_EQ( out.str(), "5" );
-  EXPECT_EQ( err.str(), "" );
-}
-#endif
 
 TEST_F( Unittest, test_005 )
 {
@@ -162,7 +115,7 @@ print(x);
   EXPECT_EQ( err.str(), "" );
 }
 
-TEST_F( Unittest, test_block_02 )
+TEST_F( Unittest, test_fn_00 )
 {
   const char * src = R"(
 fn foo(a, b) {
@@ -176,6 +129,45 @@ print( foo(2, 3) );
   ( void ) eval( src, out, err );
 
   EXPECT_EQ( out.str(), "5" );
+  EXPECT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, test_fn_01 )
+{
+  const char * src = R"(
+
+var d = 5;
+
+fn foo(a) {
+  return a + d;
+}
+
+print(foo(2));
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "7" );
+  EXPECT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, test_fn_02 )
+{
+  const char * src = R"(
+
+var d = 5;
+
+fn foo(a, b) {
+  var c = a + b;
+  return c + d;
+}
+
+print(foo(2, 3));
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "10" );
   EXPECT_EQ( err.str(), "" );
 }
 
@@ -209,6 +201,9 @@ print(a);
     print(c);
 
     a = b + c;
+
+    b = b + 2;
+    print(b);
   }
 }
 print(a);
@@ -216,6 +211,90 @@ print(a);
 
   ( void ) eval( src, out, err );
 
-  EXPECT_EQ( out.str(), "1235" );
+  EXPECT_EQ( out.str(), "12345" );
+  EXPECT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, test_binary_01 )
+{
+  const char * src = R"(
+print(3 - 5);
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "-2" );
+  EXPECT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, test_class_01 )
+{
+  const char * src = R"(
+class Foo {}
+
+println(Foo);
+
+var f = Foo();
+
+println(f);
+
+
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "class<Foo>\ninstance<Foo>\n" );
+  EXPECT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, test_assignment_01 )
+{
+  const char * src = R"(
+var x = 2;
+
+print(x);
+
+x = x + 1;
+
+print(x);
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "23" );
+  EXPECT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, test_class_02 )
+{
+  const char * src = R"(
+class Foo {}
+
+var foo = Foo();
+
+print(foo.bar);
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "NIL" );
+  EXPECT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, DISABLED_test_class_03 )
+{
+  const char * src = R"(
+class Foo {}
+
+var foo = Foo();
+
+foo.bar = 5;
+
+print(foo.bar);
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "5" );
   EXPECT_EQ( err.str(), "" );
 }

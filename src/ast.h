@@ -7,15 +7,25 @@
 
 struct AstNode
 {
+  virtual ~AstNode()
+  {
+  }
   virtual void compile( Compiler & );
+};
+
+struct Type
+{
+  std::string type;
 };
 
 struct Expr : AstNode
 {
+  // virtual Result<Type> infer_type()  = 0;
 };
 
 struct Stmt : AstNode
 {
+  // virtual bool type_check() = 0;
 };
 
 struct Literal : Expr
@@ -27,17 +37,18 @@ struct Literal : Expr
 
 struct Binary : Expr
 {
+  std::string op;
   Expr * rhs;
   Expr * lhs;
-  Binary( Expr * lhs, Expr * rhs );
+  Binary( const std::string & op, Expr * lhs, Expr * rhs );
   void compile( Compiler & compiler ) override;
 };
 
-struct FnCall : Expr
+struct Call : Expr
 {
   Expr * callee;
   std::vector<Expr *> args;
-  FnCall( Expr * callee, const std::vector<Expr *> & args );
+  Call( Expr * callee, const std::vector<Expr *> & args );
   void compile( Compiler & compiler ) override;
 };
 
@@ -104,8 +115,9 @@ struct WhileStmt : Stmt
 
 struct DebugPrint : Stmt
 {
+  bool newline;
   Expr * expr;
-  DebugPrint( Expr * expr );
+  DebugPrint( Expr * expr, bool newline = false );
   void compile( Compiler & compiler ) override;
 };
 
@@ -114,4 +126,57 @@ struct Return : Stmt
   Expr * expr;
   Return( Expr * expr );
   void compile( Compiler & compiler ) override;
+};
+
+struct ClassDecl : Stmt
+{
+  std::string name;
+  ClassDecl( const std::string & name );
+  void compile( Compiler & compiler ) override;
+};
+
+struct Get : Expr
+{
+  Expr * object;
+  std::string property;
+  Get( Expr * object, const std::string & name );
+  void compile( Compiler & compiler ) override;
+};
+
+struct Set : Expr
+{
+  Expr * object;
+  std::string property;
+  Expr * value;
+  Set( Expr * object, const std::string & name, Expr * value );
+  void compile( Compiler & compiler ) override;
+};
+
+// basic allocator, should be replaced by a arena allocator
+// arena allocator does not allow me to use stl containers
+class NodeAllocator
+{
+public:
+  NodeAllocator()
+  {
+  }
+  ~NodeAllocator()
+  {
+    for( AstNode * node : m_nodes )
+    {
+      delete node;
+    }
+    m_nodes.clear();
+  }
+
+  template <typename T, typename... Args>
+  T * alloc( Args &&... args )
+  {
+    T * ptr = new T( std::forward<Args>( args )... );
+    m_nodes.push_back( ptr );
+    return ptr;
+  }
+
+private:
+  std::list<AstNode *> m_nodes;
 };

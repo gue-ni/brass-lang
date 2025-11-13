@@ -1,12 +1,12 @@
 #include "bytecode.h"
 #include "object.h"
 
-void CodeObject::emit_instr( Instruction instr )
+void CodeObject::emit_instr( OpCode instr )
 {
   instructions.push_back( instr );
 }
 
-void CodeObject::emit_instr( Instruction instr, uint16_t arg )
+void CodeObject::emit_instr( OpCode instr, uint16_t arg )
 {
   uint16_t hi = ( arg >> 8 ) & 0xff;
   uint16_t lo = arg & 0xff;
@@ -27,4 +27,14 @@ uint16_t CodeObject::emit_name( const std::string & name )
   uint16_t index = ( uint16_t ) names.size();
   names.push_back( name );
   return index;
+}
+
+CodeObject * CodeObject::get_root()
+{
+  CodeObject* current = this;
+  if (current->parent != nullptr)
+  {
+    current = current->parent;
+  }
+  return current;
 }

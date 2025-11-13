@@ -10,6 +10,10 @@ public:
   {
   }
 
+  virtual ~GarbageCollected()
+  {
+  }
+
 protected:
   bool m_marked;
 };
@@ -23,6 +27,18 @@ public:
     T * object = new T( std::forward<Args>( args )... );
     m_heap.push_back( object );
     return object;
+  }
+
+  GarbageCollector()
+  {
+  }
+
+  ~GarbageCollector()
+  {
+    for (GarbageCollected* gc_obj : m_heap)
+    {
+      delete gc_obj;
+    }
   }
 
 private:

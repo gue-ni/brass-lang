@@ -1,6 +1,14 @@
 #include "vm.h"
 #include "object.h"
 #include <cassert>
+#include <iomanip>
+
+#define RUNTIME_ERROR( msg )       \
+  do                               \
+  {                                \
+    m_runtime_error_message = msg; \
+    goto label_runtime_error;      \
+  } while( 0 )
 
 VirtualMachine::VirtualMachine( std::ostream & out, std::ostream & err, GarbageCollector & gc )
     : m_out( out )
@@ -27,64 +35,97 @@ int VirtualMachine::run( CodeObject * co )
         }
       case OP_LOAD_GLOBAL :
         {
-          std::string var = current_frame().code_object->names[arg];
+          CodeObject * current = current_frame().code_object;
+          CodeObject * global  = current->get_root(); // something is not right here
+
+          assert( global != nullptr );
+          assert( arg < global->names.size() );
+
+          std::string var = global->names[arg]; // this throws an error
           auto it         = m_globals.find( var );
           if( it != m_globals.end() )
           {
             push( it->second );
           }
+          else
+          {
+            push( Object::Nil() );
+          }
           break;
         }
       case OP_STORE_GLOBAL :
         {
-          std::string var = current_frame().code_object->names[arg];
-          Object obj      = pop();
+          CodeObject * current = current_frame().code_object;
+          CodeObject * global  = current->get_root();
+
+          assert( global != nullptr );
+          assert( arg < global->names.size() );
+
+          std::string var = global->names[arg];
+          Object obj      = pop(); // when we get the function with pop it is corrupted
           m_globals[var]  = obj;
           break;
         }
       case OP_LOAD_LOCAL :
         {
-          Object obj = m_stack[current_frame().bp + arg];
+          size_t slot = current_frame().bp + arg;
+          assert( slot < m_stack.size() );
+          Object obj = m_stack[slot];
           push( obj );
           break;
         }
       case OP_STORE_LOCAL :
         {
-          Object obj                        = pop();
-          m_stack[current_frame().bp + arg] = obj;
+          Object obj  = pop();
+          size_t slot = current_frame().bp + arg;
+          assert( slot < m_stack.size() );
+          m_stack[slot] = obj;
           break;
         }
       case OP_ADD :
         {
           Object lhs    = pop();
           Object rhs    = pop();
-          int a         = lhs.integer;
-          int b         = rhs.integer;
-          Object result = Object::Integer( a + b );
+          Object result = Object::Integer( lhs.integer + rhs.integer );
           push( result );
           break;
         }
-      case OP_DEBUG_PRINT :
+      case OP_SUB :
         {
-          Object obj = pop();
-          m_out << obj.integer;
+          Object lhs    = pop();
+          Object rhs    = pop();
+          Object result = Object::Integer( lhs.integer - rhs.integer );
+          push( result );
+          break;
           break;
         }
-      case OP_MAKE_FUNCTION :
-        {
-          // TODO: setup environment
-          break;
-        }
-      case OP_CALL_FUNCTION :
+      case OP_PRINT :
         {
           Object obj = pop();
-          assert( obj.type == Object::Type::FUNCTION );
-          FunctionObject * fn   = obj.function;
-          size_t stack_size     = m_stack.size();
-          size_t new_stack_size = stack_size + ( fn->code_object.num_locals - fn->num_args );
-          size_t bp             = m_stack.size() - fn->num_args;
-          m_stack.resize( new_stack_size );
-          m_frames.push( Frame( &fn->code_object, bp ) );
+          m_out << obj;
+          break;
+        }
+      case OP_PRINTLN :
+        {
+          Object obj = pop();
+          m_out << obj << std::endl;
+          break;
+        }
+      case OP_CALL :
+        {
+          Object obj = pop();
+          if( obj.type == Object::Type::FUNCTION )
+          {
+            call_fn( obj.function );
+          }
+          else if( obj.type == Object::Type::CLASS )
+          {
+            call_ctor( obj.klass );
+          }
+          else
+          {
+            RUNTIME_ERROR( "Error: not a callable object" );
+          }
           break;
         }
       case OP_RETURN :
@@ -96,12 +137,65 @@ int VirtualMachine::run( CodeObject * co )
           push( obj );
           break;
         }
+      case OP_GET_PROPERTY :
+        {
+          CodeObject * global = global_code_object();
+          std::string name    = global->names[arg];
+          Object obj          = pop();
+
+          if( obj.type == Object::Type::INSTANCE )
+          {
+            Object property = obj.instance->fields.get( name.c_str() );
+            push( property );
+          }
+          else
+          {
+            RUNTIME_ERROR( "not a object" );
+            push( Object::Nil() );
+          }
+          break;
+        }
+      case OP_SET_PROPERTY :
+        {
+          CodeObject * global = global_code_object();
+          std::string name    = global->names[arg];
+
+          Object obj      = pop();
+          Object property = pop();
+          break;
+        }
+      case OP_JMP :
+        {
+          current_frame().ip += arg;
+          break;
+        }
+      case OP_JMP_IF_FALSE :
+        {
+          Object obj = pop();
+          if( obj.is_falsy() )
+          {
+            current_frame().ip += arg;
+          }
+          break;
+        }
+      case OP_LOOP :
+        {
+          current_frame().ip -= arg;
+          break;
+        }
       default :
+        m_err << "Unhandled instruction: 0x" << std::hex << std::setw( 2 ) << std::setfill( '0' )
+              << static_cast<int>( instr ) << "\n";
         m_exit = true;
+        goto label_runtime_error;
         break;
     }
   }
   return 0;
+
+label_runtime_error:
+  m_err << "RUNTIME ERROR: " << m_runtime_error_message << std::endl;
+  return 1;
 }
 
 void VirtualMachine::push( Object obj )
@@ -121,9 +215,19 @@ Frame & VirtualMachine::current_frame()
   return m_frames.top();
 }
 
-std::pair<Instruction, uint16_t> VirtualMachine::next_instr()
+CodeObject * VirtualMachine::current_code_object()
 {
-  Instruction instr = static_cast<Instruction>( *( current_frame().ip++ ) );
+  return current_frame().code_object;
+}
+
+CodeObject * VirtualMachine::global_code_object()
+{
+  return current_code_object()->get_root();
+}
+
+std::pair<OpCode, uint16_t> VirtualMachine::next_instr()
+{
+  OpCode instr = static_cast<OpCode>( *( current_frame().ip++ ) );
   switch( instr )
   {
     case OP_LOAD_CONST :
@@ -131,6 +235,11 @@ std::pair<Instruction, uint16_t> VirtualMachine::next_instr()
     case OP_STORE_GLOBAL :
     case OP_LOAD_LOCAL :
     case OP_STORE_LOCAL :
+    case OP_GET_PROPERTY :
+    case OP_SET_PROPERTY :
+    case OP_JMP :
+    case OP_JMP_IF_FALSE :
+    case OP_LOOP :
       {
         uint8_t hi   = *( current_frame().ip++ );
         uint8_t lo   = *( current_frame().ip++ );
@@ -140,4 +249,19 @@ std::pair<Instruction, uint16_t> VirtualMachine::next_instr()
     default :
       return std::make_pair( instr, 0xffff );
   }
+}
+
+void VirtualMachine::call_fn( FunctionObject * fn )
+{
+  size_t stack_size     = m_stack.size();
+  size_t new_stack_size = stack_size + ( fn->code_object.num_locals - fn->num_args );
+  size_t bp             = stack_size - fn->num_args;
+  m_stack.resize( new_stack_size );
+  m_frames.push( Frame( &fn->code_object, bp ) );
+}
+
+void VirtualMachine::call_ctor( ClassObject * cls )
+{
+  InstanceObject * instance = m_gc.alloc<InstanceObject>( cls );
+  push( Object::Instance( instance ) );
 }

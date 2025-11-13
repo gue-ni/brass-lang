@@ -1,7 +1,7 @@
 #include "parser.h"
 #include <iostream>
 
-Parser::Parser( const std::vector<Token> & tokens, ArenaAllocator & arena )
+Parser::Parser( const std::vector<Token> & tokens, NodeAllocator & arena )
     : m_tokens( tokens )
     , m_pos( m_tokens.begin() )
     , m_arena( arena )
@@ -40,8 +40,11 @@ Result<Stmt> Parser::parse_stmt()
 {
   bool expect_semicolon = true;
   Stmt * stmt           = nullptr;
-  if( match( KW_PRINT ) )
+  if( match( KW_PRINT ) || match( KW_PRINTLN ) )
   {
+
+    bool newline = previous().type == KW_PRINTLN ? true : false;
+
     if( !match( LPAREN ) )
     {
       return make_error<Stmt>( "Expected '('" );
@@ -58,7 +61,7 @@ Result<Stmt> Parser::parse_stmt()
       return make_error<Stmt>( "Expected ')'" );
     }
 
-    stmt = m_arena.alloc<DebugPrint>( expr.node );
+    stmt = m_arena.alloc<DebugPrint>( expr.node, newline );
   }
   else if( match( KW_FN ) )
   {
@@ -76,7 +79,6 @@ Result<Stmt> Parser::parse_stmt()
 
     std::vector<std::string> args;
 
-#if 1
     do
     {
       if( peek().type == RPAREN )
@@ -93,7 +95,6 @@ Result<Stmt> Parser::parse_stmt()
 
       ( void ) match( COMMA );
     } while( !is_finished() );
-#endif
 
     if( !match( RPAREN ) )
     {
@@ -186,6 +187,29 @@ Result<Stmt> Parser::parse_stmt()
 
     stmt = block.node;
   }
+  else if( match( KW_CLASS ) )
+  {
+    expect_semicolon = false;
+
+    if( !match( IDENTIFIER ) )
+    {
+      return make_error<Stmt>( "Expected identifier" );
+    }
+
+    std::string name = previous().lexeme;
+
+    if( !match( LBRACE ) )
+    {
+      return make_error<Stmt>( "Expected '{'" );
+    }
+
+    if( !match( RBRACE ) )
+    {
+      return make_error<Stmt>( "Expected '}'" );
+    }
+
+    stmt = m_arena.alloc<ClassDecl>( name.c_str() );
+  }
 
   if( !match( SEMICOLON ) )
   {
@@ -196,6 +220,16 @@ Result<Stmt> Parser::parse_stmt()
   }
 
   return make_result( stmt );
+}
+
+Result<FnDecl> Parser::parse_fn_decl()
+{
+  return make_error<FnDecl>( "not impelmented" );
+}
+
+Result<ClassDecl> Parser::parse_class_decl()
+{
+  return make_error<ClassDecl>( "not impelmented" );
 }
 
 Result<Block> Parser::parse_block()
@@ -237,42 +271,50 @@ Result<Expr> Parser::parse_primary()
   {
     Variable * var = m_arena.alloc<Variable>( previous().lexeme );
 
-    if( !match( LPAREN ) )
+    if( match( LPAREN ) )
+    {
+      std::vector<Expr *> args;
+
+      do
+      {
+        if( peek().type == RPAREN )
+        {
+          break;
+        }
+
+        auto arg = parse_expr();
+        if( !arg.ok() )
+        {
+        }
+
+        args.push_back( arg.node );
+
+        ( void ) match( COMMA );
+      } while( !is_finished() );
+
+      if( !match( RPAREN ) )
+      {
+        return make_error<Expr>( "Expected ')'" );
+      }
+
+      Call * fn_call = m_arena.alloc<Call>( var, args );
+      return make_result<Expr>( fn_call );
+    }
+    else if( match( DOT ) )
+    {
+      if( !match( IDENTIFIER ) )
+      {
+        return make_error<Expr>( "expected identifier" );
+      }
+
+      std::string name = previous().lexeme;
+      Get * get        = m_arena.alloc<Get>( var, name );
+      return make_result<Expr>( get );
+    }
+    else
     {
       return make_result<Expr>( var );
     }
-
-    std::vector<Expr *> args;
-
-    do
-    {
-      if( peek().type == RPAREN )
-      {
-        break;
-      }
-
-      auto arg = parse_expr();
-      if (!arg.ok()) {
-
-      }
-
-
-      args.push_back( arg.node);
-
-
-
-      ( void ) match( COMMA );
-    } while( !is_finished() );
-
-
-
-    if( !match( RPAREN ) )
-    {
-      return make_error<Expr>( "Expected ')'" );
-    }
-
-    FnCall * fn_call = m_arena.alloc<FnCall>( var, args );
-    return make_result<Expr>( fn_call );
   }
   else
   {
@@ -289,14 +331,15 @@ Result<Expr> Parser::parse_term()
     return make_error<Expr>( left.error );
   }
 
-  if( match( PLUS ) )
+  if( match( PLUS ) || match( MINUS ) )
   {
-    auto right = parse_factor();
+    std::string op = previous().lexeme;
+    auto right     = parse_factor();
     if( !right.ok() )
     {
       return make_error<Expr>( right.error );
     }
-    expr = m_arena.alloc<Binary>( left.node, right.node );
+    expr = m_arena.alloc<Binary>( op, left.node, right.node );
   }
   else
   {
@@ -334,24 +377,12 @@ bool Parser::match( TokenType type )
   }
 }
 
-void Parser::expect( TokenType type, const std::string & lexeme )
-{
-  const Token & token = peek();
-  if( token.type != type /* || ( !peek().lexeme.empty() && peek().lexeme != lexeme ) */ )
-  {
-    std::cerr << "Unexpected token '" << peek().lexeme << "'" << std::endl;
-    std::abort();
-  }
-
-  ( void ) next();
-}
-
 bool Parser::is_finished()
 {
   return m_pos == m_tokens.end();
 }
 
-Result<Program> parse( const std::vector<Token> & tokens, ArenaAllocator & allocator )
+Result<Program> parse( const std::vector<Token> & tokens, NodeAllocator & allocator )
 {
   Parser parser( tokens, allocator );
   return parser.run();
