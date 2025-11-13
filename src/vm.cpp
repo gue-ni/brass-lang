@@ -152,7 +152,6 @@ int VirtualMachine::run( CodeObject * co )
           else
           {
             RUNTIME_ERROR( "not a object" );
-            push( Object::Nil() );
           }
           break;
         }
@@ -163,6 +162,14 @@ int VirtualMachine::run( CodeObject * co )
 
           Object obj      = pop();
           Object property = pop();
+          if (obj.type == Object::Type::INSTANCE)
+          {
+            obj.instance->fields.set(name.c_str(), property);
+          }
+          else
+          {
+            RUNTIME_ERROR("asdf");
+          }
           break;
         }
       case OP_JMP :

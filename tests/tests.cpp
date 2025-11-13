@@ -235,7 +235,7 @@ print foo.bar;
   EXPECT_EQ( err.str(), "" );
 }
 
-TEST_F( Unittest, DISABLED_test_class_03 )
+TEST_F( Unittest, test_class_03 )
 {
   const char * src = R"(
 class Foo {}
@@ -245,6 +245,29 @@ var foo = Foo();
 foo.bar = 5;
 
 print foo.bar;
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "5" );
+  EXPECT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, test_class_04 )
+{
+  const char * src = R"(
+class Vec2 {}
+
+var vec = Vec2();
+
+vec.x = 2;
+vec.y = 3;
+
+fn sum(v) {
+  return v.x + v.y;
+}
+
+print sum(vec);
   )";
 
   ( void ) eval( src, out, err );

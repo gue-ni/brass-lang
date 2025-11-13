@@ -1,4 +1,5 @@
 #include "parser.h"
+#include "ast.h"
 #include <iostream>
 
 Parser::Parser( const std::vector<Token> & tokens, NodeAllocator & arena )
@@ -35,139 +36,6 @@ Result<Program> Parser::parse_program()
 
   return make_result( prog );
 }
-
-#if 0
-Result<Stmt> Parser::parse_stmt()
-{
-  bool expect_semicolon = true;
-  Stmt * stmt           = nullptr;
-  if( match( KW_PRINT ) || match( KW_PRINTLN ) )
-  {
-    bool newline = previous().type == KW_PRINTLN ? true : false;
-
-    if( !match( LPAREN ) )
-    {
-      return make_error<Stmt>( "Expected '('" );
-    }
-
-    Result<Expr> expr = parse_expr();
-    if( !expr.ok() )
-    {
-      return make_error<Stmt>( expr.error );
-    }
-
-    if( !match( RPAREN ) )
-    {
-      return make_error<Stmt>( "Expected ')'" );
-    }
-
-    stmt = m_arena.alloc<Print>( expr.node, newline );
-  }
-  else if( match( KW_FN ) )
-  {
-    return parse_fn_decl();
-  }
-  else if( match( KW_RETURN ) )
-  {
-    Result<Expr> expr = parse_expr();
-    if( !expr.ok() )
-    {
-      return make_error<Stmt>( expr.error );
-    }
-
-    stmt = m_arena.alloc<Return>( expr.node );
-  }
-  else if( match( KW_VAR ) )
-  {
-    if( !match( IDENTIFIER ) )
-    {
-      return make_error<Stmt>( "Expected identifier" );
-    }
-
-    std::string name = previous().lexeme;
-
-    if( !match( EQUAL ) )
-    {
-      return make_error<Stmt>( "Expected '='" );
-    }
-
-    auto expr = parse_expr();
-    if( !expr.ok() )
-    {
-      return make_error<Stmt>( expr.error );
-    }
-
-    stmt = m_arena.alloc<VariableDecl>( name, expr.node );
-  }
-  else if( match( IDENTIFIER ) )
-  {
-    std::string name = previous().lexeme;
-
-    if( !match( EQUAL ) )
-    {
-      return make_error<Stmt>( "Expected '='" );
-    }
-
-    auto expr = parse_expr();
-    if( !expr.ok() )
-    {
-      return make_error<Stmt>( expr.error );
-    }
-
-    stmt = m_arena.alloc<Assignment>( name, expr.node );
-  }
-  else if( match( LBRACE ) )
-  {
-    expect_semicolon = false;
-
-    auto block = parse_block();
-    if( !block.ok() )
-    {
-      return make_error<Stmt>( block.error );
-    }
-
-    if( !match( RBRACE ) )
-    {
-      return make_error<Stmt>( "Expected '}'" );
-    }
-
-    stmt = block.node;
-  }
-  else if( match( KW_CLASS ) )
-  {
-    expect_semicolon = false;
-
-    if( !match( IDENTIFIER ) )
-    {
-      return make_error<Stmt>( "Expected identifier" );
-    }
-
-    std::string name = previous().lexeme;
-
-    if( !match( LBRACE ) )
-    {
-      return make_error<Stmt>( "Expected '{'" );
-    }
-
-    if( !match( RBRACE ) )
-    {
-      return make_error<Stmt>( "Expected '}'" );
-    }
-
-    stmt = m_arena.alloc<ClassDecl>( name.c_str() );
-  }
-
-  if( !match( SEMICOLON ) )
-  {
-    if( expect_semicolon )
-    {
-      return make_error<Stmt>( "Expected ';'" );
-    }
-  }
-
-  return make_result( stmt );
-}
-#endif
 
 Result<Stmt> Parser::parse_statement()
 {
@@ -282,15 +150,15 @@ Result<Expr> Parser::parse_assignment()
   {
     auto value = parse_assignment();
 
-    Variable * var = dynamic_cast<Variable *>( expr.node );
-
-    if( var )
+    if( dynamic_cast<Variable *>( expr.node ) )
     {
+      Variable * var = ( Variable * ) expr.node;
       return make_result<Expr>( m_arena.alloc<Assignment>( var->name, value.node ) );
     }
-    else
+    else if( dynamic_cast<Get *>( expr.node ) != nullptr )
     {
-      return make_error<Expr>( "something went wrong" );
+      Get * get = ( Get * ) expr.node;
+      return make_result<Expr>( m_arena.alloc<Set>( get->object, get->property, value.node ) );
     }
 
     return make_error<Expr>( "assigment not impelmented" );
