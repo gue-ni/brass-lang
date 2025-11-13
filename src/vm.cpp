@@ -24,8 +24,8 @@ int VirtualMachine::run( CodeObject * co )
 
   while( !m_exit && ( current_frame().ip != current_frame().code_object->instructions.end() ) )
   {
-    auto [instr, arg] = next_instr();
-    switch( instr )
+    auto [op, arg] = next_instr();
+    switch( op )
     {
       case OP_LOAD_CONST :
         {
@@ -218,7 +218,7 @@ int VirtualMachine::run( CodeObject * co )
         }
       default :
         m_err << "Unhandled instruction: 0x" << std::hex << std::setw( 2 ) << std::setfill( '0' )
-              << static_cast<int>( instr ) << "\n";
+              << static_cast<int>( op ) << "\n";
         m_exit = true;
         goto label_runtime_error;
         break;
@@ -260,8 +260,8 @@ CodeObject * VirtualMachine::global_code_object()
 
 std::pair<OpCode, uint16_t> VirtualMachine::next_instr()
 {
-  OpCode instr = static_cast<OpCode>( *( current_frame().ip++ ) );
-  switch( instr )
+  OpCode op = static_cast<OpCode>( *( current_frame().ip++ ) );
+  switch( op )
   {
     case OP_LOAD_CONST :
     case OP_LOAD_GLOBAL :
@@ -277,10 +277,10 @@ std::pair<OpCode, uint16_t> VirtualMachine::next_instr()
         uint8_t hi   = *( current_frame().ip++ );
         uint8_t lo   = *( current_frame().ip++ );
         uint16_t arg = ( uint16_t( hi ) << 8 ) | ( uint16_t( lo ) );
-        return std::make_pair( instr, arg );
+        return std::make_pair( op, arg );
       }
     default :
-      return std::make_pair( instr, 0xffff );
+      return std::make_pair( op, 0xffff );
   }
 }
 
