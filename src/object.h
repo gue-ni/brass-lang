@@ -40,13 +40,7 @@ struct ClassObject : public GarbageCollected
   char * name;
   // HashMap<Object> methods;
   ClassObject( const char * cl_name );
-  ~ClassObject()
-  {
-    if (name) {
-      free(name);
-      name = nullptr;
-    }
-  }
+  ~ClassObject();
 };
 
 struct InstanceObject : public GarbageCollected
@@ -54,6 +48,7 @@ struct InstanceObject : public GarbageCollected
   ClassObject * klass;
   HashMap<Object> fields;
   InstanceObject( ClassObject * klass );
+  ~InstanceObject();
 };
 
 class Object

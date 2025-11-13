@@ -46,6 +46,14 @@ void Binary::compile( Compiler & compiler )
   {
     instr = OP_SUB;
   }
+  else if( op == "*" )
+  {
+    instr = OP_MULT;
+  }
+  else if( op == "/" )
+  {
+    instr = OP_DIV;
+  }
   else
   {
     assert( false && "Unreachable" );
@@ -54,13 +62,13 @@ void Binary::compile( Compiler & compiler )
   compiler.code->emit_instr( instr );
 }
 
-DebugPrint::DebugPrint( Expr * expr, bool newline )
+Print::Print( Expr * expr, bool newline )
     : expr( expr )
     , newline( newline )
 {
 }
 
-void DebugPrint::compile( Compiler & compiler )
+void Print::compile( Compiler & compiler )
 {
   expr->compile( compiler );
   compiler.code->emit_instr( newline ? OP_PRINTLN : OP_PRINT );
@@ -75,7 +83,25 @@ IfStmt::IfStmt( Expr * cond, Stmt * then_stmt, Stmt * else_stmt )
 
 void IfStmt::compile( Compiler & compiler )
 {
-  // TODO
+  cond->compile( compiler );
+
+  size_t jmp_1, jmp_2;
+
+  jmp_1 = compiler.code->emit_jump( OP_JMP_IF_FALSE );
+
+  then_stmt->compile( compiler );
+
+  if( else_stmt )
+  {
+    jmp_2 = compiler.code->emit_jump( OP_JMP );
+  }
+  compiler.code->end_jump( jmp_1 );
+
+  if( else_stmt )
+  {
+    else_stmt->compile( compiler );
+    compiler.code->end_jump( jmp_2 );
+  }
 }
 
 WhileStmt::WhileStmt( Expr * cond, Stmt * body )
@@ -235,4 +261,14 @@ void Set::compile( Compiler & compiler )
   object->compile( compiler );
   uint16_t index = compiler.define_global_var( property );
   compiler.code->emit_instr( OP_SET_PROPERTY, index );
+}
+
+ExprStmt::ExprStmt( Expr * expr )
+    : expr( expr )
+{
+}
+
+void ExprStmt::compile( Compiler & compiler )
+{
+  expr->compile( compiler );
 }

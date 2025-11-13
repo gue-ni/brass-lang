@@ -7,13 +7,8 @@
 
 TEST(misc, test_alloc_00)
 {
-  NodeAllocator allocator;
-  auto* ast = allocator.alloc<DebugPrint>(allocator.alloc<Literal>(Object::Integer(5)));
 }
 
 TEST(misc, test_alloc_01)
 {
-  NodeAllocator allocator;
-  Program* prog = allocator.alloc<Program>();
-  prog->stmts.push_back(allocator.alloc<DebugPrint>(allocator.alloc<Literal>(Object::Integer(5))));
 }

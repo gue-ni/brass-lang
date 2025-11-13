@@ -7,8 +7,6 @@
 #include <string>
 #include <vector>
 
-
-
 class Parser
 {
 public:
@@ -20,21 +18,29 @@ private:
   std::vector<Token>::const_iterator m_pos;
   NodeAllocator & m_arena;
 
-  Result<Program> parse_program();
-  Result<Stmt> parse_stmt();
-  Result<FnDecl> parse_fn_decl();
-  Result<ClassDecl> parse_class_decl();
-  Result<Block> parse_block();
+  Result<Stmt> parse_statement();
+  Result<Stmt> parse_fn_decl();
+  Result<Stmt> parse_var_decl();
+  Result<Stmt> parse_declaration();
+  Result<Stmt> parse_class_decl();
+  Result<Stmt> parse_block();
+  Result<Stmt> parse_expr_stmt();
+  Result<Stmt> parse_while();
+  Result<Stmt> parse_if();
+
+  Result<Expr> parse_expression();
   Result<Expr> parse_expr();
   Result<Expr> parse_primary();
+  Result<Expr> parse_unary();
   Result<Expr> parse_term();
   Result<Expr> parse_factor();
+  Result<Expr> parse_assignment();
+  Result<Expr> parse_call();
 
   const Token & peek();
   const Token & previous();
   const Token & next();
   bool match( TokenType type );
-  void expect( TokenType type, const std::string & lexeme = "" );
   bool is_finished();
 };
 

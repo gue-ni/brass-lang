@@ -59,6 +59,13 @@ struct Variable : Expr
   void compile( Compiler & compiler ) override;
 };
 
+struct ExprStmt : Stmt
+  {
+  Expr *expr;
+  ExprStmt(Expr* expr);
+  void compile( Compiler & compiler ) override;
+};
+
 struct VariableDecl : Stmt
 {
   std::string name;
@@ -67,7 +74,7 @@ struct VariableDecl : Stmt
   void compile( Compiler & compiler ) override;
 };
 
-struct Assignment : Stmt
+struct Assignment : Expr
 {
   std::string name;
   Expr * expr;
@@ -113,11 +120,11 @@ struct WhileStmt : Stmt
   void compile( Compiler & compiler ) override;
 };
 
-struct DebugPrint : Stmt
+struct Print : Stmt
 {
   bool newline;
   Expr * expr;
-  DebugPrint( Expr * expr, bool newline = false );
+  Print( Expr * expr, bool newline = false );
   void compile( Compiler & compiler ) override;
 };
 

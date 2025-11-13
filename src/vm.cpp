@@ -24,8 +24,8 @@ int VirtualMachine::run( CodeObject * co )
 
   while( !m_exit && ( current_frame().ip != current_frame().code_object->instructions.end() ) )
   {
-    auto [instr, arg] = next_instr();
-    switch( instr )
+    auto [op, arg] = next_instr();
+    switch( op )
     {
       case OP_LOAD_CONST :
         {
@@ -78,7 +78,10 @@ int VirtualMachine::run( CodeObject * co )
         {
           Object obj  = pop();
           size_t slot = current_frame().bp + arg;
-          assert( slot < m_stack.size() );
+          if( !( slot < m_stack.size() ) )
+          {
+            RUNTIME_ERROR( "Variable not declard" );
+          }
           m_stack[slot] = obj;
           break;
         }
@@ -95,6 +98,28 @@ int VirtualMachine::run( CodeObject * co )
           Object lhs    = pop();
           Object rhs    = pop();
           Object result = Object::Integer( lhs.integer - rhs.integer );
+          push( result );
+          break;
+          break;
+        }
+      case OP_MULT :
+        {
+          Object lhs    = pop();
+          Object rhs    = pop();
+          Object result = Object::Integer( lhs.integer * rhs.integer );
+          push( result );
+          break;
+          break;
+        }
+      case OP_DIV :
+        {
+          Object lhs = pop();
+          Object rhs = pop();
+          if( rhs.integer == 0 )
+          {
+            RUNTIME_ERROR( "Division by zero" );
+          }
+          Object result = Object::Integer( lhs.integer / rhs.integer );
           push( result );
           break;
           break;
@@ -145,13 +170,13 @@ int VirtualMachine::run( CodeObject * co )
 
           if( obj.type == Object::Type::INSTANCE )
           {
-            Object property = obj.instance->fields.get( name.c_str() );
+            Object property = Object::Nil();
+            obj.instance->fields.get( name.c_str(), property );
             push( property );
           }
           else
           {
             RUNTIME_ERROR( "not a object" );
-            push( Object::Nil() );
           }
           break;
         }
@@ -162,6 +187,14 @@ int VirtualMachine::run( CodeObject * co )
 
           Object obj      = pop();
           Object property = pop();
+          if( obj.type == Object::Type::INSTANCE )
+          {
+            obj.instance->fields.set( name.c_str(), property );
+          }
+          else
+          {
+            RUNTIME_ERROR( "asdf" );
+          }
           break;
         }
       case OP_JMP :
@@ -185,7 +218,7 @@ int VirtualMachine::run( CodeObject * co )
         }
       default :
         m_err << "Unhandled instruction: 0x" << std::hex << std::setw( 2 ) << std::setfill( '0' )
-              << static_cast<int>( instr ) << "\n";
+              << static_cast<int>( op ) << "\n";
         m_exit = true;
         goto label_runtime_error;
         break;
@@ -227,8 +260,8 @@ CodeObject * VirtualMachine::global_code_object()
 
 std::pair<OpCode, uint16_t> VirtualMachine::next_instr()
 {
-  OpCode instr = static_cast<OpCode>( *( current_frame().ip++ ) );
-  switch( instr )
+  OpCode op = static_cast<OpCode>( *( current_frame().ip++ ) );
+  switch( op )
   {
     case OP_LOAD_CONST :
     case OP_LOAD_GLOBAL :
@@ -244,10 +277,10 @@ std::pair<OpCode, uint16_t> VirtualMachine::next_instr()
         uint8_t hi   = *( current_frame().ip++ );
         uint8_t lo   = *( current_frame().ip++ );
         uint16_t arg = ( uint16_t( hi ) << 8 ) | ( uint16_t( lo ) );
-        return std::make_pair( instr, arg );
+        return std::make_pair( op, arg );
       }
     default :
-      return std::make_pair( instr, 0xffff );
+      return std::make_pair( op, 0xffff );
   }
 }
 
