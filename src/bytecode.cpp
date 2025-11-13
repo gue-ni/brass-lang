@@ -1,6 +1,13 @@
 #include "bytecode.h"
 #include "object.h"
 
+std::pair<uint8_t, uint8_t> short_to_bytes( uint16_t u16 )
+{
+  uint16_t hi = ( u16 >> 8 ) & 0xff;
+  uint16_t lo = u16 & 0xff;
+  return std::make_pair( ( uint8_t ) hi, ( uint8_t ) lo );
+}
+
 void CodeObject::emit_instr( OpCode instr )
 {
   instructions.push_back( instr );
@@ -22,6 +29,24 @@ void CodeObject::emit_literal( Object value )
   emit_instr( OP_LOAD_CONST, index );
 }
 
+size_t CodeObject::emit_jump( OpCode op )
+{
+  size_t jump_start = instructions.size();
+  emit_instr( op, 0xffff );
+  return jump_start;
+}
+
+void CodeObject::end_jump( size_t jump_start )
+{
+  size_t jump_end = instructions.size();
+  size_t jump_len = jump_end - (jump_start + 3);
+
+  auto [hi, lo] = short_to_bytes( jump_len );
+
+  instructions[jump_start + 1] = hi;
+  instructions[jump_start + 2] = lo;
+}
+
 uint16_t CodeObject::emit_name( const std::string & name )
 {
   uint16_t index = ( uint16_t ) names.size();
@@ -31,8 +56,8 @@ uint16_t CodeObject::emit_name( const std::string & name )
 
 CodeObject * CodeObject::get_root()
 {
-  CodeObject* current = this;
-  if (current->parent != nullptr)
+  CodeObject * current = this;
+  if( current->parent != nullptr )
   {
     current = current->parent;
   }

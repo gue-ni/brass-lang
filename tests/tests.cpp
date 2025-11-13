@@ -284,3 +284,51 @@ print area(sq);
   EXPECT_EQ( out.str(), "6" );
   EXPECT_EQ( err.str(), "" );
 }
+
+TEST_F( Unittest, test_if_00 )
+{
+  const char * src = R"(
+if (0) {
+  print 10;
+} 
+
+print 20;
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "20" );
+  EXPECT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, test_if_01 )
+{
+  const char * src = R"(
+if (0) {
+  print 10;
+} else {
+  print 20;
+}
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "20" );
+  EXPECT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, test_if_02 )
+{
+  const char * src = R"(
+if (1) {
+  print 10;
+} else {
+  print 20;
+}
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "10" );
+  EXPECT_EQ( err.str(), "" );
+}

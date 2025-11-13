@@ -25,6 +25,8 @@ private:
   Result<Stmt> parse_class_decl();
   Result<Stmt> parse_block();
   Result<Stmt> parse_expr_stmt();
+  Result<Stmt> parse_while();
+  Result<Stmt> parse_if();
 
   Result<Expr> parse_expression();
   Result<Expr> parse_expr();

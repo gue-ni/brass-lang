@@ -40,6 +40,8 @@ struct CodeObject
   void emit_instr( OpCode );
   void emit_instr( OpCode, uint16_t );
   void emit_literal( Object );
+  size_t emit_jump(OpCode);
+  void end_jump(size_t);
   uint16_t emit_name( const std::string & name );
   CodeObject* get_root();
 };
