@@ -79,6 +79,13 @@ public:
   T get( const char * key )
   {
     size_t idx = hash( key );
+
+
+    Entry * curr = m_entries[idx];
+    if (curr) {
+      return curr->value;
+    }
+
     return T();
   }
 

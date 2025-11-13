@@ -201,6 +201,9 @@ print(a);
     print(c);
 
     a = b + c;
+
+    b = b + 2;
+    print(b);
   }
 }
 print(a);
@@ -208,7 +211,7 @@ print(a);
 
   ( void ) eval( src, out, err );
 
-  EXPECT_EQ( out.str(), "1235" );
+  EXPECT_EQ( out.str(), "12345" );
   EXPECT_EQ( err.str(), "" );
 }
 
@@ -244,11 +247,29 @@ println(f);
   EXPECT_EQ( err.str(), "" );
 }
 
+TEST_F( Unittest, test_assignment_01 )
+{
+  const char * src = R"(
+var x = 2;
+
+print(x);
+
+x = x + 1;
+
+print(x);
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "23" );
+  EXPECT_EQ( err.str(), "" );
+}
+
 TEST_F( Unittest, test_class_02 )
 {
   const char * src = R"(
-class Foo {
-}
+class Foo {}
+
 var foo = Foo();
 
 print(foo.bar);
@@ -256,6 +277,24 @@ print(foo.bar);
 
   ( void ) eval( src, out, err );
 
-  EXPECT_EQ( out.str(), "" );
+  EXPECT_EQ( out.str(), "NIL" );
+  EXPECT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, DISABLED_test_class_03 )
+{
+  const char * src = R"(
+class Foo {}
+
+var foo = Foo();
+
+foo.bar = 5;
+
+print(foo.bar);
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "5" );
   EXPECT_EQ( err.str(), "" );
 }

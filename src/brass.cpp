@@ -14,10 +14,9 @@ int eval( const char * src, std::ostream & out, std::ostream & err )
   NodeAllocator allocator;
 
   Result<Program> result = parse( tokens, allocator );
-
   if( !result.ok() )
   {
-    err << result.error << std::endl;
+    err << "PARSER ERROR: " << result.error << std::endl;
     return 1;
   }
 

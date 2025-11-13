@@ -36,7 +36,7 @@ void Binary::compile( Compiler & compiler )
   rhs->compile( compiler );
   lhs->compile( compiler );
 
-  Instruction instr = OP_NOP;
+  OpCode instr = OP_NOP;
 
   if( op == "+" )
   {
@@ -211,16 +211,28 @@ void ClassDecl::compile( Compiler & compiler )
 
 Get::Get( Expr * object, const std::string & name )
     : object( object )
-    , name( name )
+    , property( name )
 {
 }
 
 void Get::compile( Compiler & compiler )
 {
   object->compile( compiler );
-  // TODO: how do i get this index?
-  // cannot define the name local to the code object, as a getter can be called
-  // inside a function, which would not have access to those
-  uint16_t index = 0;
+  uint16_t index = compiler.define_global_var( property );
   compiler.code->emit_instr( OP_GET_PROPERTY, index );
+}
+
+Set::Set( Expr * object, const std::string & name, Expr * value )
+    : object( object )
+    , property( name )
+    , value( value )
+{
+}
+
+void Set::compile( Compiler & compiler )
+{
+  value->compile( compiler );
+  object->compile( compiler );
+  uint16_t index = compiler.define_global_var( property );
+  compiler.code->emit_instr( OP_SET_PROPERTY, index );
 }

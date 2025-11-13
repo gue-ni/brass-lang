@@ -302,12 +302,13 @@ Result<Expr> Parser::parse_primary()
     }
     else if( match( DOT ) )
     {
-      if (!match(IDENTIFIER)) {
+      if( !match( IDENTIFIER ) )
+      {
         return make_error<Expr>( "expected identifier" );
       }
 
       std::string name = previous().lexeme;
-      Get * get = m_arena.alloc<Get>( var, name );
+      Get * get        = m_arena.alloc<Get>( var, name );
       return make_result<Expr>( get );
     }
     else

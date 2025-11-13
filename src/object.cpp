@@ -69,22 +69,36 @@ Object Object::Instance( InstanceObject * i )
   return obj;
 }
 
-void Object::copy_from( const Object & other )
+bool Object::is_falsy() const
 {
-  type = other.type;
-  switch (type) {
-    case INTEGER :
-      integer = other.integer;
+  return !is_truthy();
+}
+
+bool Object::is_truthy() const
+{
+  switch( type )
+  {
+    case Object::NIL :
+      return false;
+    case Object::BOOLEAN :
+      return boolean;
+    case Object::INTEGER :
+      return integer != 0;
+    case Object::REAL :
+      return real != 0;
+    case Object::STRING :
+      return string != nullptr && 0 < strlen(string);
       break;
-    case FUNCTION :
-      function = other.function;
-      break;
-      default :
-        assert(false);
+    case Object::LIST :
+    case Object::MAP :
+    case Object::FUNCTION :
+    case Object::CLASS :
+    case Object::INSTANCE :
+      return true;
   }
 }
 
-FunctionObject::FunctionObject( const char * fn_name, uint8_t arity, CodeObject* ctx )
+FunctionObject::FunctionObject( const char * fn_name, uint8_t arity, CodeObject * ctx )
     : name( STRDUP( fn_name ) )
     , num_args( arity )
 {
@@ -135,5 +149,3 @@ std::ostream & operator<<( std::ostream & os, const Object & obj )
   }
   return os;
 }
-
-

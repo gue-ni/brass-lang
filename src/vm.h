@@ -36,11 +36,14 @@ private:
   std::stack<Frame> m_frames;
   std::vector<Object> m_stack;
   std::map<std::string, Object> m_globals;
+  std::string m_runtime_error_message;
 
   void push( Object );
   Object pop();
   Frame & current_frame();
-  std::pair<Instruction, uint16_t> next_instr();
+  CodeObject * current_code_object();
+  CodeObject * global_code_object();
+  std::pair<OpCode, uint16_t> next_instr();
   void call_fn( FunctionObject * );
   void call_ctor( ClassObject * );
 };

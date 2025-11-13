@@ -3,6 +3,13 @@
 #include <cassert>
 #include <iomanip>
 
+#define RUNTIME_ERROR( msg )       \
+  do                               \
+  {                                \
+    m_runtime_error_message = msg; \
+    goto label_runtime_error;      \
+  } while( 0 )
+
 VirtualMachine::VirtualMachine( std::ostream & out, std::ostream & err, GarbageCollector & gc )
     : m_out( out )
     , m_err( err )
@@ -117,7 +124,7 @@ int VirtualMachine::run( CodeObject * co )
           }
           else
           {
-            m_err << "Error: not a callable object" << std::endl;
+            RUNTIME_ERROR( "Error: not a callable object" );
           }
           break;
         }
@@ -130,14 +137,65 @@ int VirtualMachine::run( CodeObject * co )
           push( obj );
           break;
         }
+      case OP_GET_PROPERTY :
+        {
+          CodeObject * global = global_code_object();
+          std::string name    = global->names[arg];
+          Object obj          = pop();
+
+          if( obj.type == Object::Type::INSTANCE )
+          {
+            Object property = obj.instance->fields.get( name.c_str() );
+            push( property );
+          }
+          else
+          {
+            RUNTIME_ERROR( "not a object" );
+            push( Object::Nil() );
+          }
+          break;
+        }
+      case OP_SET_PROPERTY :
+        {
+          CodeObject * global = global_code_object();
+          std::string name    = global->names[arg];
+
+          Object obj      = pop();
+          Object property = pop();
+          break;
+        }
+      case OP_JMP :
+        {
+          current_frame().ip += arg;
+          break;
+        }
+      case OP_JMP_IF_FALSE :
+        {
+          Object obj = pop();
+          if( obj.is_falsy() )
+          {
+            current_frame().ip += arg;
+          }
+          break;
+        }
+      case OP_LOOP :
+        {
+          current_frame().ip -= arg;
+          break;
+        }
       default :
         m_err << "Unhandled instruction: 0x" << std::hex << std::setw( 2 ) << std::setfill( '0' )
               << static_cast<int>( instr ) << "\n";
         m_exit = true;
+        goto label_runtime_error;
         break;
     }
   }
   return 0;
+
+label_runtime_error:
+  m_err << "RUNTIME ERROR: " << m_runtime_error_message << std::endl;
+  return 1;
 }
 
 void VirtualMachine::push( Object obj )
@@ -157,9 +215,19 @@ Frame & VirtualMachine::current_frame()
   return m_frames.top();
 }
 
-std::pair<Instruction, uint16_t> VirtualMachine::next_instr()
+CodeObject * VirtualMachine::current_code_object()
 {
-  Instruction instr = static_cast<Instruction>( *( current_frame().ip++ ) );
+  return current_frame().code_object;
+}
+
+CodeObject * VirtualMachine::global_code_object()
+{
+  return current_code_object()->get_root();
+}
+
+std::pair<OpCode, uint16_t> VirtualMachine::next_instr()
+{
+  OpCode instr = static_cast<OpCode>( *( current_frame().ip++ ) );
   switch( instr )
   {
     case OP_LOAD_CONST :
@@ -169,6 +237,9 @@ std::pair<Instruction, uint16_t> VirtualMachine::next_instr()
     case OP_STORE_LOCAL :
     case OP_GET_PROPERTY :
     case OP_SET_PROPERTY :
+    case OP_JMP :
+    case OP_JMP_IF_FALSE :
+    case OP_LOOP :
       {
         uint8_t hi   = *( current_frame().ip++ );
         uint8_t lo   = *( current_frame().ip++ );

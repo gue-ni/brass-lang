@@ -7,7 +7,7 @@
 
 class Object;
 
-enum Instruction : uint8_t
+enum OpCode : uint8_t
 {
   OP_NOP,
   OP_LOAD_CONST,
@@ -23,6 +23,9 @@ enum Instruction : uint8_t
   OP_SUB,
   OP_PRINT,
   OP_PRINTLN,
+  OP_JMP,
+  OP_JMP_IF_FALSE,
+  OP_LOOP,
 };
 
 struct CodeObject
@@ -32,8 +35,8 @@ struct CodeObject
   std::vector<Object> literals;
   std::vector<uint8_t> instructions;
   std::vector<std::string> names; // local names
-  void emit_instr( Instruction );
-  void emit_instr( Instruction, uint16_t );
+  void emit_instr( OpCode );
+  void emit_instr( OpCode, uint16_t );
   void emit_literal( Object );
   uint16_t emit_name( const std::string & name );
   CodeObject* get_root();

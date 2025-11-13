@@ -29,6 +29,7 @@ struct Compiler
   void pop_scope();
   std::pair<uint16_t, bool> find_var( const std::string & name );
   uint16_t define_var( const std::string & name );
+  uint16_t define_global_var(const std::string& name);
 };
 
 void compile( AstNode *, GarbageCollector & gc, CodeObject * );

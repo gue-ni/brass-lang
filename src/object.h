@@ -52,7 +52,7 @@ struct ClassObject : public GarbageCollected
 struct InstanceObject : public GarbageCollected
 {
   ClassObject * klass;
-  // HashMap<Object> fields;
+  HashMap<Object> fields;
   InstanceObject( ClassObject * klass );
 };
 
@@ -98,8 +98,8 @@ public:
     InstanceObject * instance;
   };
 
-  private:
-        void copy_from(const Object& );
+  bool is_falsy() const;
+  bool is_truthy() const;
 };
 
 std::ostream & operator<<( std::ostream &, const Object & );

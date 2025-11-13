@@ -60,3 +60,16 @@ uint16_t Compiler::define_var( const std::string & name )
     }
   }
 }
+
+uint16_t Compiler::define_global_var( const std::string & name )
+{
+  auto & global_scope = scopes.front();
+  auto it = global_scope.find(name);
+  if (it != global_scope.end()){
+    return it->second;
+  } else {
+    CodeObject* root = code->get_root();
+    uint16_t idx = root->emit_name(name);
+    return idx;
+  }
+}
