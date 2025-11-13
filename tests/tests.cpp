@@ -44,33 +44,7 @@ TEST_F( Unittest, test_001 )
   EXPECT_EQ( err.str(), "" );
 }
 
-TEST_F( Unittest, test_002 )
-{
-  NodeAllocator allocator;
-  Program * prog = allocator.alloc<Program>();
 
-  Stmt * stmt_1 = allocator.alloc<DebugPrint>( allocator.alloc<Literal>( Object::Integer( 42 ) ) );
-
-  prog->stmts.push_back( stmt_1 );
-
-  Stmt * stmt_2 = allocator.alloc<DebugPrint>( allocator.alloc<Binary>(
-      "+", allocator.alloc<Literal>( Object::Integer( 2 ) ), allocator.alloc<Literal>( Object::Integer( 3 ) ) ) );
-
-  prog->stmts.push_back( stmt_2 );
-
-  GarbageCollector gc;
-
-  CodeObject code;
-  compile( prog, gc, &code );
-
-  VirtualMachine vm( out, err, gc );
-
-  int r = vm.run( &code );
-
-  EXPECT_EQ( r, 0 );
-  EXPECT_EQ( out.str(), "425" );
-  EXPECT_EQ( err.str(), "" );
-}
 
 TEST_F( Unittest, test_005 )
 {

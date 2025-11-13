@@ -145,7 +145,8 @@ int VirtualMachine::run( CodeObject * co )
 
           if( obj.type == Object::Type::INSTANCE )
           {
-            Object property = obj.instance->fields.get( name.c_str() );
+            Object property = Object::Nil();
+            obj.instance->fields.get( name.c_str(), property );
             push( property );
           }
           else

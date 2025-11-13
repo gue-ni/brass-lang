@@ -87,7 +87,7 @@ bool Object::is_truthy() const
     case Object::REAL :
       return real != 0;
     case Object::STRING :
-      return string != nullptr && 0 < strlen(string);
+      return string != nullptr && 0 < strlen( string );
       break;
     case Object::LIST :
     case Object::MAP :
@@ -110,8 +110,21 @@ ClassObject::ClassObject( const char * cl_name )
 {
 }
 
+ClassObject::~ClassObject()
+{
+  if( name )
+  {
+    free( name );
+    name = nullptr;
+  }
+}
+
 InstanceObject::InstanceObject( ClassObject * klass )
     : klass( klass )
+{
+}
+
+InstanceObject::~InstanceObject()
 {
 }
 
