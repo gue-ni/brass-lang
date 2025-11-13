@@ -88,12 +88,12 @@ bool Object::is_truthy() const
       return real != 0;
     case Object::STRING :
       return string != nullptr && 0 < strlen( string );
-      break;
     case Object::LIST :
     case Object::MAP :
     case Object::FUNCTION :
     case Object::CLASS :
     case Object::INSTANCE :
+    default :
       return true;
   }
 }

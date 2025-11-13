@@ -72,12 +72,6 @@ public:
     m_tail = nullptr;
   }
 
-  template <typename Allocator>
-  void push_back( const T & value, Allocator & allocator )
-  {
-    push_back( allocator.alloc<Node>( value, nullptr ) );
-  }
-
   void push_back( const T & value )
   {
     push_back( new Node( value, nullptr ) );
