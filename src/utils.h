@@ -190,7 +190,7 @@ private:
       {
         Entry * tmp = curr;
         curr        = curr->next;
-        delete tmp->key;
+        free( tmp->key );
         delete tmp;
       }
       m_table[i] = nullptr;
