@@ -7,32 +7,7 @@
 #include <string>
 #include <vector>
 
-template <typename NodeType>
-struct Result
-{
-  std::string error;
-  NodeType * node;
-  bool ok() const
-  {
-    return error.empty() && node != nullptr;
-  }
-};
 
-template <typename T>
-Result<T> make_result( T * node )
-{
-  Result<T> r;
-  r.node = node;
-  return r;
-}
-
-template <typename T>
-Result<T> make_error( const std::string & error )
-{
-  Result<T> r;
-  r.error = error;
-  return r;
-}
 
 class Parser
 {
