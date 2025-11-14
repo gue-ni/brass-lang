@@ -1,6 +1,7 @@
 #include "lexer.h"
 #include <cassert>
 #include <iostream>
+#include <algorithm>
 #include <map>
 
 std::string Token::to_string() const
