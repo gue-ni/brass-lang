@@ -123,7 +123,7 @@ void Lexer::handle_number()
 
 void Lexer::handle_string()
 {
-  auto end = std::find( m_pos, m_source.cend(), '\"' );
+  auto end = std::find( m_pos, m_source.cend(), '"' );
 
   if( end == m_source.cend() )
   {
