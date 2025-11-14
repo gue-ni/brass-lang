@@ -176,7 +176,7 @@ Result<Expr> Parser::parse_call()
         break;
       }
 
-      auto arg = parse_expr();
+      auto arg = parse_expression();
       if( !arg.ok() )
       {
       }

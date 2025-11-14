@@ -135,6 +135,10 @@ void FnDecl::compile( Compiler & compiler )
 
   FunctionObject * fn = compiler.gc.alloc<FunctionObject>( name.c_str(), ( uint8_t ) args.size(), global );
 
+  uint16_t index = compiler.define_var( name );
+  compiler.code->emit_literal( Object::Function( fn ) );
+  compiler.code->emit_instr( OP_STORE_GLOBAL, index );
+
   compiler.code = &fn->code_object;
   compiler.push_scope();
 
@@ -148,9 +152,7 @@ void FnDecl::compile( Compiler & compiler )
   compiler.pop_scope();
   compiler.code = global;
 
-  uint16_t index = compiler.define_var( name );
-  compiler.code->emit_literal( Object::Function( fn ) );
-  compiler.code->emit_instr( OP_STORE_GLOBAL, index );
+
 }
 
 Return::Return( Expr * expr )

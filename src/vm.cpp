@@ -69,7 +69,10 @@ int VirtualMachine::run( CodeObject * co )
       case OP_LOAD_LOCAL :
         {
           size_t slot = current_frame().bp + arg;
-          assert( slot < m_stack.size() );
+          if( !( slot < m_stack.size() ) )
+          {
+            RUNTIME_ERROR( "OP_LOAD_LOCAL: Variable not declard" );
+          }
           Object obj = m_stack[slot];
           push( obj );
           break;
@@ -80,7 +83,7 @@ int VirtualMachine::run( CodeObject * co )
           size_t slot = current_frame().bp + arg;
           if( !( slot < m_stack.size() ) )
           {
-            RUNTIME_ERROR( "Variable not declard" );
+            RUNTIME_ERROR( "OP_STORE_LOCAL: Variable not declard" );
           }
           m_stack[slot] = obj;
           break;
@@ -99,7 +102,6 @@ int VirtualMachine::run( CodeObject * co )
           Object rhs    = pop();
           Object result = Object::Integer( lhs.integer - rhs.integer );
           push( result );
-          break;
           break;
         }
       case OP_MULT :

@@ -350,3 +350,44 @@ while (i) {
   EXPECT_EQ( out.str(), "54321" );
   EXPECT_EQ( err.str(), "" );
 }
+
+TEST_F( Unittest, test_while_01 )
+{
+  const char * src = R"(
+fn foo(n) {
+  var i = n;
+  while (i) {
+    print i;
+    i = i - 1;
+  }
+  return 0;
+}
+
+foo(3);
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "321" );
+  EXPECT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, test_rec_01 )
+{
+  const char * src = R"(
+fn sum(n) {
+  if (n) {
+    return n + sum(n - 1);
+  } else {
+    return 0;
+  }
+}
+
+print sum(5);
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "15" );
+  EXPECT_EQ( err.str(), "" );
+}
