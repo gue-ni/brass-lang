@@ -227,6 +227,9 @@ void FnDecl::compile( Compiler & compiler )
 
 void FnDecl::declare_global( TypeContext & ctx )
 {
+  // TODO
+  TypeInfo * retval;
+  std::vector<TypeInfo *> args;
 }
 
 bool FnDecl::check_types( TypeContext & ctx )
@@ -528,4 +531,9 @@ TypeInfo * TypeContext::lookup_type( const std::string & name )
 void TypeContext::throw_type_error( const std::string & msg )
 {
   error = msg;
+}
+
+void Stmt::declare_global( TypeContext & ctx )
+{
+  // do nothing
 }

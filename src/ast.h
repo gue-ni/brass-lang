@@ -7,10 +7,21 @@
 
 struct TypeInfo
 {
-  std::string type_name;
+  std::string name;
   bool declard = false;
+
+  // only needed for functions
+  TypeInfo * retval;
+  std::vector<TypeInfo *> args;
+
+  bool is_callable() const
+  {
+    return retval != nullptr;
+  }
+
   TypeInfo( const std::string & info )
-      : type_name( info )
+      : name( info )
+      , retval( nullptr )
   {
   }
 };
@@ -23,7 +34,7 @@ public:
   void pop_scope();
   void define_var( const std::string & name, TypeInfo * type_info );
   TypeInfo * lookup_var( const std::string & name );
-  TypeInfo * define_type( const std::string & name);
+  TypeInfo * define_type( const std::string & name );
   TypeInfo * lookup_type( const std::string & name );
 
   void throw_type_error( const std::string & msg );
@@ -59,10 +70,7 @@ struct Expr : AstNode
 
 struct Stmt : AstNode
 {
-  virtual void declare_global( TypeContext & ctx )
-  {
-  }
-
+  virtual void declare_global( TypeContext & ctx );
   virtual bool check_types( TypeContext & ctx ) = 0;
 };
 
@@ -146,6 +154,7 @@ struct FnDecl : Stmt
 {
   std::string name;
   std::vector<std::string> args;
+  std::string retval;
   Stmt * body;
   FnDecl( const std::string & name, const std::vector<std::string> & args, Stmt * body );
   void compile( Compiler & compiler ) override;

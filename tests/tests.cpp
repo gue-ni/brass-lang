@@ -443,3 +443,45 @@ print 50 + "hello";
   EXPECT_EQ( out.str(), "" );
   EXPECT_EQ( err.str(), "TYPE ERROR: Type mismatch in binary operation\n" );
 }
+
+TEST_F( Unittest, DISABLED_test_types_03 )
+{
+  const char * src = R"(
+var x: int = 5;
+print x;
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "5" );
+  EXPECT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, DISABLED_test_types_04 )
+{
+  const char * src = R"(
+var x: int = "hello";
+print x;
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "" );
+  EXPECT_EQ( err.str(), "TYPE ERROR: " );
+}
+
+TEST_F( Unittest, DISABLED_test_types_05 )
+{
+  const char * src = R"(
+fn add(a: int, b: int) -> int {
+  return a + b;
+}
+
+print add(5, 2);
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "" );
+  EXPECT_EQ( err.str(), "" );
+}
