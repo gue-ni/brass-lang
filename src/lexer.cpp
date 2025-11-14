@@ -1,4 +1,6 @@
 #include "lexer.h"
+#include <algorithm>
+#include <cassert>
 #include <iostream>
 #include <map>
 
@@ -120,6 +122,32 @@ void Lexer::handle_number()
   push_token( Token( NUMBER, number ) );
 }
 
+void Lexer::handle_string()
+{
+  auto end = std::find( m_pos, m_source.cend(), '"' );
+
+  if( end == m_source.cend() )
+  {
+    std::cerr << "Expected \" at end of string" << std::endl;
+    assert( false );
+  }
+
+  std::string str( m_pos, end );
+
+// un-escape newline literals
+#if 0
+  std::string::size_type pos = 0;
+  while( ( pos = str.find( "\\n", pos ) ) != std::string::npos )
+  {
+    str.replace( pos, 2, "\n" );
+    ++pos;
+  }
+#endif
+
+  push_token( Token( STRING, str ) );
+  m_pos = end + 1;
+}
+
 void Lexer::handle_identifier()
 {
   static const std::map<std::string, TokenType> keywords = {
@@ -209,6 +237,11 @@ void Lexer::run()
       case '=' :
         push_token( match_next( '=' ) ? Token( EQUAL_EQUAL, "==" ) : Token( EQUAL, c ) );
         break;
+      case '\"' :
+        {
+          handle_string();
+          break;
+        }
       default :
         {
           if( is_numeric( c ) )

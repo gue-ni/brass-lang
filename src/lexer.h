@@ -79,6 +79,7 @@ private:
   bool is_numeric( char );
   void handle_identifier();
   void handle_number();
+  void handle_string();
   char next();
   char peek() const;
   char peek_next() const;

@@ -9,23 +9,36 @@
 
 class Object;
 
+class VirtualMachine;
+
+typedef Object ( *NativeFunction )( VirtualMachine *, int, Object[] );
+
+struct StringObject : public GarbageCollected
+{
+  char * str;
+  StringObject( const char * s );
+  ~StringObject();
+};
+
 struct FunctionObject : public GarbageCollected
 {
   char * name;
   uint8_t num_args = 0;
   CodeObject code_object;
-  FunctionObject( const char * fn_name, uint8_t arity, CodeObject* ctx );
+  FunctionObject( const char * fn_name, uint8_t arity, CodeObject * ctx );
   ~FunctionObject()
   {
-    if (name)
+    if( name )
     {
-      free(name);
+      free( name );
       name = nullptr;
     }
   }
 };
 
-struct ListObject : public GarbageCollected
+struct ListObject
+    : public GarbageCollected
+    , public LinkedList<Object>
 {
 };
 
@@ -38,7 +51,6 @@ struct MapObject
 struct ClassObject : public GarbageCollected
 {
   char * name;
-  // HashMap<Object> methods;
   ClassObject( const char * cl_name );
   ~ClassObject();
 };
@@ -64,6 +76,7 @@ public:
     LIST,
     MAP,
     FUNCTION,
+    NATIVE,
     CLASS,
     INSTANCE,
   };
@@ -74,8 +87,9 @@ public:
   static Object Boolean( bool );
   static Object Integer( int );
   static Object Real( double );
-  static Object String( const char * );
+  static Object String( StringObject * );
   static Object Function( FunctionObject * );
+  static Object Native( NativeFunction );
   static Object Class( ClassObject * );
   static Object Instance( InstanceObject * );
 
@@ -85,10 +99,11 @@ public:
     bool boolean;
     int integer;
     double real;
-    char * string;
+    StringObject * string;
     ListObject * list;
     MapObject * map;
     FunctionObject * function;
+    NativeFunction native;
     ClassObject * klass;
     InstanceObject * instance;
   };
