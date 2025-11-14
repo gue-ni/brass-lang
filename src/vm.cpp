@@ -11,17 +11,7 @@
     goto label_runtime_error;      \
   } while( 0 )
 
-Object f_typeof( int argc, Object args[] )
-{
-  Object arg0 = args[0];
-  switch( arg0.type )
-  {
-    case Object ::Type ::INTEGER :
-      return Object::String( "integer" );
-    default :
-      return Object::String( "unknown type" );
-  }
-}
+
 
 VirtualMachine::VirtualMachine( std::ostream & out, std::ostream & err, GarbageCollector & gc )
     : m_out( out )

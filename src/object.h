@@ -16,18 +16,20 @@ struct FunctionObject : public GarbageCollected
   char * name;
   uint8_t num_args = 0;
   CodeObject code_object;
-  FunctionObject( const char * fn_name, uint8_t arity, CodeObject* ctx );
+  FunctionObject( const char * fn_name, uint8_t arity, CodeObject * ctx );
   ~FunctionObject()
   {
-    if (name)
+    if( name )
     {
-      free(name);
+      free( name );
       name = nullptr;
     }
   }
 };
 
-struct ListObject : public GarbageCollected
+struct ListObject
+    : public GarbageCollected
+    , public LinkedList<Object>
 {
 };
 
@@ -40,7 +42,6 @@ struct MapObject
 struct ClassObject : public GarbageCollected
 {
   char * name;
-  // HashMap<Object> methods;
   ClassObject( const char * cl_name );
   ~ClassObject();
 };
@@ -79,7 +80,7 @@ public:
   static Object Real( double );
   static Object String( const char * );
   static Object Function( FunctionObject * );
-  static Object Native( NativeFunction  );
+  static Object Native( NativeFunction );
   static Object Class( ClassObject * );
   static Object Instance( InstanceObject * );
 
@@ -93,7 +94,7 @@ public:
     ListObject * list;
     MapObject * map;
     FunctionObject * function;
-    NativeFunction  native;
+    NativeFunction native;
     ClassObject * klass;
     InstanceObject * instance;
   };

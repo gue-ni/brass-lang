@@ -9,7 +9,6 @@
 #include <stack>
 
 
-Object f_typeof( int argc, Object args[] );
 
 struct Frame
 {
