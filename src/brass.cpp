@@ -5,6 +5,7 @@
 #include "lexer.h"
 #include "parser.h"
 #include "vm.h"
+#include <fstream>
 #include <sstream>
 
 int eval( const char * src, std::ostream & out, std::ostream & err )
@@ -91,5 +92,31 @@ int repl()
 
 int brass( int argc, char * argv[] )
 {
-  return repl();
+  if( 1 < argc )
+  {
+    std::string filename = argv[1];
+
+    std::fstream file( filename );
+    if( !file.is_open() )
+    {
+      std::cerr << "Could not open '" << filename << "'" << std::endl;
+      return 1;
+    }
+
+    std::ostringstream ss;
+    ss << file.rdbuf();
+    std::string src = ss.str();
+
+    if( src.empty() )
+    {
+      std::cerr << "File '" << filename << "' is empty" << std::endl;
+      return 1;
+    }
+
+    return eval( src.c_str(), std::cout, std::cerr );
+  }
+  else
+  {
+    return repl();
+  }
 }

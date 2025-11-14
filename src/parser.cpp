@@ -33,7 +33,7 @@ Result<Stmt> Parser::parse_statement()
   {
     bool newline = previous().type == KW_PRINTLN ? true : false;
 
-    Result<Expr> expr = parse_expr();
+    Result<Expr> expr = parse_expression();
     if( !expr.ok() )
       return make_error<Stmt>( expr.error );
 
@@ -44,7 +44,7 @@ Result<Stmt> Parser::parse_statement()
   }
   else if( match( KW_RETURN ) )
   {
-    Result<Expr> expr = parse_expr();
+    Result<Expr> expr = parse_expression();
     if( !expr.ok() )
       return make_error<Stmt>( expr.error );
 
@@ -336,11 +336,6 @@ Result<Stmt> Parser::parse_if()
 Result<Expr> Parser::parse_expression()
 {
   return parse_assignment();
-}
-
-Result<Expr> Parser::parse_expr()
-{
-  return parse_term();
 }
 
 Result<Expr> Parser::parse_primary()
