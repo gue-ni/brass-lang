@@ -28,11 +28,12 @@ enum OpCode : uint8_t
   OP_JMP,
   OP_JMP_IF_FALSE,
   OP_LOOP,
+  OP_POP,
 };
 
 struct CodeObject
 {
-  CodeObject* parent = nullptr;
+  CodeObject * parent = nullptr;
   uint16_t num_locals = 0;
   std::vector<Object> literals;
   std::vector<uint8_t> instructions;
@@ -40,8 +41,9 @@ struct CodeObject
   void emit_instr( OpCode );
   void emit_instr( OpCode, uint16_t );
   void emit_literal( Object );
-  size_t emit_jump(OpCode);
-  void end_jump(size_t);
+  size_t emit_jump( OpCode );
+  void end_jump( size_t );
+  void emit_loop( size_t );
   uint16_t emit_name( const std::string & name );
-  CodeObject* get_root();
+  CodeObject * get_root();
 };

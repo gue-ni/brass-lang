@@ -59,7 +59,7 @@ Result<Stmt> Parser::parse_statement()
   }
   else if( match( KW_WHILE ) )
   {
-    return make_error<Stmt>( "'while' not implemented" );
+    return parse_while();
   }
   else if( match( LBRACE ) )
   {
@@ -176,7 +176,7 @@ Result<Expr> Parser::parse_call()
         break;
       }
 
-      auto arg = parse_expr();
+      auto arg = parse_expression();
       if( !arg.ok() )
       {
       }
@@ -279,6 +279,26 @@ Result<Stmt> Parser::parse_expr_stmt()
   return make_result<Stmt>( m_arena.alloc<ExprStmt>( expr.node ) );
 }
 
+Result<Stmt> Parser::parse_while()
+{
+  if( !match( LPAREN ) )
+    return make_error<Stmt>( "expected '('" );
+
+  auto cond = parse_expression();
+  if( !cond.ok() )
+    return make_error<Stmt>( cond.error );
+
+  if( !match( RPAREN ) )
+    return make_error<Stmt>( "expected ')'" );
+
+  auto body = parse_declaration();
+  if( !body.ok() )
+    return make_error<Stmt>( body.error );
+
+  WhileStmt * stmt = m_arena.alloc<WhileStmt>( cond.node, body.node );
+  return make_result<Stmt>( stmt );
+}
+
 Result<Stmt> Parser::parse_if()
 {
   if( !match( LPAREN ) )
@@ -291,27 +311,18 @@ Result<Stmt> Parser::parse_if()
   if( !match( RPAREN ) )
     return make_error<Stmt>( "expected ')'" );
 
-  if( !match( LBRACE ) )
-    return make_error<Stmt>( "expected '{'" );
-
   Stmt * a = nullptr;
   Stmt * b = nullptr;
 
-  auto then_branch = parse_statement();
+  auto then_branch = parse_declaration();
   if( !then_branch.ok() )
     return make_error<Stmt>( then_branch.error );
 
   a = then_branch.node;
 
-  if( !match( RBRACE ) )
-  {
-    return make_error<Stmt>( "expected '}'" );
-  }
-
   if( match( KW_ELSE ) )
   {
-
-    auto else_branch = parse_statement();
+    auto else_branch = parse_declaration();
     if( !else_branch.ok() )
       return make_error<Stmt>( else_branch.error );
 

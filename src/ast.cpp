@@ -95,6 +95,7 @@ void IfStmt::compile( Compiler & compiler )
   {
     jmp_2 = compiler.code->emit_jump( OP_JMP );
   }
+
   compiler.code->end_jump( jmp_1 );
 
   if( else_stmt )
@@ -112,7 +113,12 @@ WhileStmt::WhileStmt( Expr * cond, Stmt * body )
 
 void WhileStmt::compile( Compiler & compiler )
 {
-  // TODO
+  size_t jmp_2 = compiler.code->instructions.size();
+  cond->compile(compiler);
+  size_t jmp_1 = compiler.code->emit_jump(OP_JMP_IF_FALSE);
+  body->compile(compiler);
+  compiler.code->emit_loop(jmp_2);
+  compiler.code->end_jump(jmp_1);
 }
 
 FnDecl::FnDecl( const std::string & name, const std::vector<std::string> & args, Stmt * body )
@@ -129,6 +135,10 @@ void FnDecl::compile( Compiler & compiler )
 
   FunctionObject * fn = compiler.gc.alloc<FunctionObject>( name.c_str(), ( uint8_t ) args.size(), global );
 
+  uint16_t index = compiler.define_var( name );
+  compiler.code->emit_literal( Object::Function( fn ) );
+  compiler.code->emit_instr( OP_STORE_GLOBAL, index );
+
   compiler.code = &fn->code_object;
   compiler.push_scope();
 
@@ -142,9 +152,7 @@ void FnDecl::compile( Compiler & compiler )
   compiler.pop_scope();
   compiler.code = global;
 
-  uint16_t index = compiler.define_var( name );
-  compiler.code->emit_literal( Object::Function( fn ) );
-  compiler.code->emit_instr( OP_STORE_GLOBAL, index );
+
 }
 
 Return::Return( Expr * expr )
