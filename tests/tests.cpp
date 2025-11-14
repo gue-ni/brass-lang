@@ -418,3 +418,16 @@ println typeof(x);
   EXPECT_EQ( out.str(), "Hello, World!\nstring\n" );
   EXPECT_EQ( err.str(), "" );
 }
+
+TEST_F( Unittest, test_types_01 )
+{
+  const char * src = R"(
+var x = 10;
+x = "hello";
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "" );
+  EXPECT_EQ( err.str(), "TYPE ERROR" );
+}

@@ -17,6 +17,27 @@ void Literal::compile( Compiler & compiler )
   compiler.code->emit_literal( value );
 }
 
+TypeInfo * Literal::infer_types( TypeContext & ctx )
+{
+  switch( value.type )
+  {
+    case Object ::Type ::INTEGER :
+      {
+        type = ctx.define_type( "integer" );
+        break;
+      }
+    case Object ::Type ::STRING :
+      {
+        type = ctx.define_type( "string" );
+        break;
+      }
+    default :
+      type = new TypeInfo( "unknown" );
+      break;
+  }
+  return type;
+}
+
 void Program::compile( Compiler & compiler )
 {
   // declare builtin functions
@@ -26,6 +47,25 @@ void Program::compile( Compiler & compiler )
   {
     stmt->compile( compiler );
   }
+}
+
+bool Program::check_types( TypeContext & ctx )
+{
+  ctx.push_scope();
+  for( Stmt * stmt : stmts )
+  {
+    stmt->declare_global( ctx ); // if
+  }
+
+  for( Stmt * stmt : stmts )
+  {
+    if( !stmt->check_types( ctx ) )
+    {
+      return false;
+    }
+  }
+  ctx.pop_scope();
+  return true;
 }
 
 Binary::Binary( const std::string & op, Expr * lhs, Expr * rhs )
@@ -64,6 +104,17 @@ void Binary::compile( Compiler & compiler )
   }
 
   compiler.code->emit_instr( instr );
+}
+
+TypeInfo * Binary::infer_types( TypeContext & ctx )
+{
+  TypeInfo* l = lhs->infer_types(ctx);
+  TypeInfo* r = rhs->infer_types(ctx);
+  if (l == r) {
+    return r;
+  } else {
+    return nullptr;
+  }
 }
 
 Print::Print( Expr * expr, bool newline )
@@ -157,6 +208,10 @@ void FnDecl::compile( Compiler & compiler )
   compiler.code = global;
 }
 
+void FnDecl::declare_global( TypeContext & ctx )
+{
+}
+
 Return::Return( Expr * expr )
     : expr( expr )
 {
@@ -181,6 +236,11 @@ void Variable::compile( Compiler & compiler )
     std::cerr << "Undefined varaible " << name << std::endl;
   }
   compiler.code->emit_instr( is_global ? OP_LOAD_GLOBAL : OP_LOAD_LOCAL, index );
+}
+
+TypeInfo * Variable::infer_types( TypeContext & ctx )
+{
+  return nullptr;
 }
 
 Call::Call( Expr * callee, const std::vector<Expr *> & args )
@@ -209,6 +269,11 @@ void Block::compile( Compiler & compiler )
   compiler.pop_scope();
 }
 
+bool Block::check_types( TypeContext & ctx )
+{
+  return false;
+}
+
 VariableDecl::VariableDecl( const std::string & name, Expr * expr )
     : name( name )
     , expr( expr )
@@ -221,6 +286,42 @@ void VariableDecl::compile( Compiler & compiler )
   uint16_t index = compiler.define_var( name );
   bool global    = compiler.scopes.size() == 1;
   compiler.code->emit_instr( global ? OP_STORE_GLOBAL : OP_STORE_LOCAL, index );
+}
+
+bool VariableDecl::check_types( TypeContext & ctx )
+{
+  // TODO: check if the variable was declard before this should throw an error
+  TypeInfo * a = ctx.lookup_var( name ); // TODO: should also return whether it is global
+
+  if( a->declard )
+  {
+    ctx.throw_type_error( "was already declared" );
+  }
+  else
+  {
+    a->declard = true;
+  }
+
+  TypeInfo * b = expr->infer_types( ctx );
+
+  if( a != b )
+  {
+    ctx.throw_type_error( "balksdf" );
+    return false;
+  }
+  else
+  {
+    return true;
+  }
+}
+
+void VariableDecl::declare_global( TypeContext & ctx )
+{
+  TypeInfo * expr_type = expr->infer_types( ctx );
+  if( expr_type )
+  {
+    ctx.define_var( name, expr_type );
+  }
 }
 
 Assignment::Assignment( const std::string & name, Expr * expr )
@@ -236,6 +337,33 @@ void Assignment::compile( Compiler & compiler )
   compiler.code->emit_instr( is_global ? OP_STORE_GLOBAL : OP_STORE_LOCAL, index );
 }
 
+TypeInfo * Assignment::infer_types( TypeContext & ctx )
+{
+  // an assignment returns the type that was assigned
+  return expr->infer_types( ctx );
+}
+
+bool Assignment::check_types( TypeContext & ctx )
+{
+  TypeInfo * var_type = ctx.lookup_var( name );
+
+  if( !var_type )
+  {
+    ctx.throw_type_error( "undeclard variable assigned" );
+    return false;
+  }
+
+  TypeInfo * expr_type = expr->infer_types( ctx );
+
+  if( var_type != expr_type )
+  {
+    ctx.throw_type_error( "type mismatch in assignment" );
+    return false;
+  }
+
+  return true;
+}
+
 ClassDecl::ClassDecl( const std::string & name )
     : name( name )
 {
@@ -247,6 +375,12 @@ void ClassDecl::compile( Compiler & compiler )
   uint16_t index    = compiler.define_var( name );
   compiler.code->emit_literal( Object::Class( cls ) );
   compiler.code->emit_instr( OP_STORE_GLOBAL, index );
+}
+
+void ClassDecl::declare_global( TypeContext & ctx )
+{
+  TypeInfo* type_info = ctx.define_type(name);
+    ctx.define_var( name, type_info );
 }
 
 Get::Get( Expr * object, const std::string & name )
@@ -285,4 +419,67 @@ ExprStmt::ExprStmt( Expr * expr )
 void ExprStmt::compile( Compiler & compiler )
 {
   expr->compile( compiler );
+}
+
+bool ExprStmt::check_types( TypeContext & ctx )
+{
+  return expr->check_types( ctx );
+}
+
+TypeContext::TypeContext()
+{
+}
+
+void TypeContext::push_scope()
+{
+  m_scopes.push_back( {} );
+}
+
+void TypeContext::pop_scope()
+{
+  m_scopes.pop_back();
+}
+
+void TypeContext::define_var( const std::string & name, TypeInfo * type_info )
+{
+  auto & scope = m_scopes.back();
+  scope[name]  = type_info;
+}
+
+TypeInfo * TypeContext::lookup_var( const std::string & name )
+{
+  for( auto scope_it = m_scopes.rbegin(); scope_it != m_scopes.rend(); scope_it++ )
+  {
+    auto it = scope_it->find( name );
+    if( it != scope_it->end() )
+    {
+      return it->second;
+    }
+  }
+  return nullptr;
+}
+
+TypeInfo * TypeContext::define_type( const std::string & name, bool forward )
+{
+  auto it = m_types.find( name );
+  if( it != m_types.end() )
+  {
+    return it->second;
+  }
+  else
+  {
+    TypeInfo * ti = new TypeInfo( name );
+    m_types[name] = ti;
+    return ti;
+  }
+}
+
+TypeInfo * TypeContext::lookup_type( const std::string & name )
+{
+  return nullptr;
+}
+
+void TypeContext::throw_type_error( const std::string & msg )
+{
+  error = msg;
 }
