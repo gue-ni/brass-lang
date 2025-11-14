@@ -1,6 +1,7 @@
 #include "ast.h"
 #include <algorithm>
 #include <cassert>
+#include <iostream>
 
 void AstNode::compile( Compiler & )
 {
@@ -18,6 +19,9 @@ void Literal::compile( Compiler & compiler )
 
 void Program::compile( Compiler & compiler )
 {
+  // declare builtin functions
+  ( void ) compiler.define_var( "typeof" );
+
   for( Stmt * stmt : stmts )
   {
     stmt->compile( compiler );
@@ -114,11 +118,11 @@ WhileStmt::WhileStmt( Expr * cond, Stmt * body )
 void WhileStmt::compile( Compiler & compiler )
 {
   size_t jmp_2 = compiler.code->instructions.size();
-  cond->compile(compiler);
-  size_t jmp_1 = compiler.code->emit_jump(OP_JMP_IF_FALSE);
-  body->compile(compiler);
-  compiler.code->emit_loop(jmp_2);
-  compiler.code->end_jump(jmp_1);
+  cond->compile( compiler );
+  size_t jmp_1 = compiler.code->emit_jump( OP_JMP_IF_FALSE );
+  body->compile( compiler );
+  compiler.code->emit_loop( jmp_2 );
+  compiler.code->end_jump( jmp_1 );
 }
 
 FnDecl::FnDecl( const std::string & name, const std::vector<std::string> & args, Stmt * body )
@@ -151,8 +155,6 @@ void FnDecl::compile( Compiler & compiler )
 
   compiler.pop_scope();
   compiler.code = global;
-
-
 }
 
 Return::Return( Expr * expr )
@@ -174,6 +176,10 @@ Variable::Variable( const std::string & name )
 void Variable::compile( Compiler & compiler )
 {
   auto [index, is_global] = compiler.find_var( name );
+  if( index == UNDEFINED )
+  {
+    std::cerr << "Undefined varaible " << name << std::endl;
+  }
   compiler.code->emit_instr( is_global ? OP_LOAD_GLOBAL : OP_LOAD_LOCAL, index );
 }
 
@@ -190,7 +196,7 @@ void Call::compile( Compiler & compiler )
     expr->compile( compiler );
   }
   callee->compile( compiler );
-  compiler.code->emit_instr( OP_CALL );
+  compiler.code->emit_instr( OP_CALL, ( uint16_t ) args.size() );
 }
 
 void Block::compile( Compiler & compiler )

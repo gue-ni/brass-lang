@@ -8,6 +8,9 @@
 #include <ostream>
 #include <stack>
 
+
+Object f_typeof( int argc, Object args[] );
+
 struct Frame
 {
   CodeObject * code_object;

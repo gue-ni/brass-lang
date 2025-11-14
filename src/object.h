@@ -9,6 +9,8 @@
 
 class Object;
 
+typedef Object ( *NativeFunction )( int, Object[] );
+
 struct FunctionObject : public GarbageCollected
 {
   char * name;
@@ -64,6 +66,7 @@ public:
     LIST,
     MAP,
     FUNCTION,
+    NATIVE,
     CLASS,
     INSTANCE,
   };
@@ -76,6 +79,7 @@ public:
   static Object Real( double );
   static Object String( const char * );
   static Object Function( FunctionObject * );
+  static Object Native( NativeFunction  );
   static Object Class( ClassObject * );
   static Object Instance( InstanceObject * );
 
@@ -89,6 +93,7 @@ public:
     ListObject * list;
     MapObject * map;
     FunctionObject * function;
+    NativeFunction  native;
     ClassObject * klass;
     InstanceObject * instance;
   };

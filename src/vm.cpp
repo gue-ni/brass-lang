@@ -1,4 +1,5 @@
 #include "vm.h"
+#include "builtin.h"
 #include "object.h"
 #include <cassert>
 #include <iomanip>
@@ -10,11 +11,24 @@
     goto label_runtime_error;      \
   } while( 0 )
 
+Object f_typeof( int argc, Object args[] )
+{
+  Object arg0 = args[0];
+  switch( arg0.type )
+  {
+    case Object ::Type ::INTEGER :
+      return Object::String( "integer" );
+    default :
+      return Object::String( "unknown type" );
+  }
+}
+
 VirtualMachine::VirtualMachine( std::ostream & out, std::ostream & err, GarbageCollector & gc )
     : m_out( out )
     , m_err( err )
     , m_gc( gc )
 {
+  m_globals.insert( std::make_pair( "typeof", Object::Native( f_typeof ) ) );
 }
 
 int VirtualMachine::run( CodeObject * co )
@@ -149,6 +163,18 @@ int VirtualMachine::run( CodeObject * co )
           {
             call_ctor( obj.klass );
           }
+          else if( obj.type == Object::Type::NATIVE )
+          {
+            NativeFunction fn = obj.native;
+            size_t fn_arity   = arg;
+
+            size_t stack_size = m_stack.size();
+            size_t bp         = stack_size - fn_arity;
+            Object * fn_args  = &m_stack[bp];
+
+            Object retval = fn( fn_arity, fn_args );
+            push( retval );
+          }
           else
           {
             RUNTIME_ERROR( "Error: not a callable object" );
@@ -275,6 +301,7 @@ std::pair<OpCode, uint16_t> VirtualMachine::next_instr()
     case OP_JMP :
     case OP_JMP_IF_FALSE :
     case OP_LOOP :
+    case OP_CALL :
       {
         uint8_t hi   = *( current_frame().ip++ );
         uint8_t lo   = *( current_frame().ip++ );

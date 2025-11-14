@@ -53,6 +53,14 @@ Object Object::Function( FunctionObject * fn )
   return obj;
 }
 
+Object Object::Native( NativeFunction fn )
+{
+  Object obj;
+  obj.type   = NATIVE;
+  obj.native = fn;
+  return obj;
+}
+
 Object Object::Class( ClassObject * c )
 {
   Object obj;
