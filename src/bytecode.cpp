@@ -39,12 +39,19 @@ size_t CodeObject::emit_jump( OpCode op )
 void CodeObject::end_jump( size_t jump_start )
 {
   size_t jump_end = instructions.size();
-  size_t jump_len = jump_end - (jump_start + 3);
+  size_t jump_len = jump_end - ( jump_start + 3 );
 
   auto [hi, lo] = short_to_bytes( jump_len );
 
   instructions[jump_start + 1] = hi;
   instructions[jump_start + 2] = lo;
+}
+
+void CodeObject::emit_loop( size_t start )
+{
+  size_t end    = instructions.size() + 3;
+  size_t offset = end - start;
+  emit_instr( OP_LOOP, ( uint16_t ) offset );
 }
 
 uint16_t CodeObject::emit_name( const std::string & name )

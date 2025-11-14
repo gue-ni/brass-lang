@@ -321,7 +321,8 @@ TEST_F( Unittest, test_if_02 )
 {
   const char * src = R"(
 if (1) {
-  print 10;
+  var x = 10;
+  print x;
 } else {
   print 20;
 }
@@ -330,5 +331,22 @@ if (1) {
   ( void ) eval( src, out, err );
 
   EXPECT_EQ( out.str(), "10" );
+  EXPECT_EQ( err.str(), "" );
+}
+
+TEST_F( Unittest, test_while_00 )
+{
+  const char * src = R"(
+var i = 5;
+
+while (i) {
+  print i;
+  i = i - 1;
+}
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "54321" );
   EXPECT_EQ( err.str(), "" );
 }
