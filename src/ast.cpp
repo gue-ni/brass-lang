@@ -23,19 +23,16 @@ TypeInfo * Literal::infer_types( TypeContext & ctx )
   {
     case Object ::Type ::INTEGER :
       {
-        type = ctx.define_type( "integer" );
-        break;
+        return ctx.define_type( "integer" );
       }
     case Object ::Type ::STRING :
       {
-        type = ctx.define_type( "string" );
-        break;
+        return ctx.define_type( "string" );
       }
     default :
-      type = new TypeInfo( "unknown" );
-      break;
+      assert(false);
+      return nullptr;
   }
-  return type;
 }
 
 void Program::compile( Compiler & compiler )
@@ -108,11 +105,14 @@ void Binary::compile( Compiler & compiler )
 
 TypeInfo * Binary::infer_types( TypeContext & ctx )
 {
-  TypeInfo* l = lhs->infer_types(ctx);
-  TypeInfo* r = rhs->infer_types(ctx);
-  if (l == r) {
+  TypeInfo * l = lhs->infer_types( ctx );
+  TypeInfo * r = rhs->infer_types( ctx );
+  if( l == r )
+  {
     return r;
-  } else {
+  }
+  else
+  {
     return nullptr;
   }
 }
@@ -127,6 +127,11 @@ void Print::compile( Compiler & compiler )
 {
   expr->compile( compiler );
   compiler.code->emit_instr( newline ? OP_PRINTLN : OP_PRINT );
+}
+
+bool Print::check_types( TypeContext & ctx )
+{
+  return true;
 }
 
 IfStmt::IfStmt( Expr * cond, Stmt * then_stmt, Stmt * else_stmt )
@@ -160,6 +165,11 @@ void IfStmt::compile( Compiler & compiler )
   }
 }
 
+bool IfStmt::check_types( TypeContext & ctx )
+{
+  return false;
+}
+
 WhileStmt::WhileStmt( Expr * cond, Stmt * body )
     : cond( cond )
     , body( body )
@@ -174,6 +184,11 @@ void WhileStmt::compile( Compiler & compiler )
   body->compile( compiler );
   compiler.code->emit_loop( jmp_2 );
   compiler.code->end_jump( jmp_1 );
+}
+
+bool WhileStmt::check_types( TypeContext & ctx )
+{
+  return false;
 }
 
 FnDecl::FnDecl( const std::string & name, const std::vector<std::string> & args, Stmt * body )
@@ -212,6 +227,11 @@ void FnDecl::declare_global( TypeContext & ctx )
 {
 }
 
+bool FnDecl::check_types( TypeContext & ctx )
+{
+  return false;
+}
+
 Return::Return( Expr * expr )
     : expr( expr )
 {
@@ -221,6 +241,11 @@ void Return::compile( Compiler & compiler )
 {
   expr->compile( compiler );
   compiler.code->emit_instr( OP_RETURN );
+}
+
+bool Return::check_types( TypeContext & ctx )
+{
+  return false;
 }
 
 Variable::Variable( const std::string & name )
@@ -240,7 +265,8 @@ void Variable::compile( Compiler & compiler )
 
 TypeInfo * Variable::infer_types( TypeContext & ctx )
 {
-  return nullptr;
+  TypeInfo * ti = ctx.lookup_var( name );
+  return ti;
 }
 
 Call::Call( Expr * callee, const std::vector<Expr *> & args )
@@ -257,6 +283,12 @@ void Call::compile( Compiler & compiler )
   }
   callee->compile( compiler );
   compiler.code->emit_instr( OP_CALL, ( uint16_t ) args.size() );
+}
+
+TypeInfo * Call::infer_types( TypeContext & ctx )
+{
+  TypeInfo * ti = callee->infer_types( ctx );
+  return ti;
 }
 
 void Block::compile( Compiler & compiler )
@@ -339,18 +371,12 @@ void Assignment::compile( Compiler & compiler )
 
 TypeInfo * Assignment::infer_types( TypeContext & ctx )
 {
-  // an assignment returns the type that was assigned
-  return expr->infer_types( ctx );
-}
-
-bool Assignment::check_types( TypeContext & ctx )
-{
   TypeInfo * var_type = ctx.lookup_var( name );
 
   if( !var_type )
   {
     ctx.throw_type_error( "undeclard variable assigned" );
-    return false;
+    return nullptr;
   }
 
   TypeInfo * expr_type = expr->infer_types( ctx );
@@ -358,10 +384,10 @@ bool Assignment::check_types( TypeContext & ctx )
   if( var_type != expr_type )
   {
     ctx.throw_type_error( "type mismatch in assignment" );
-    return false;
+    return nullptr;
   }
 
-  return true;
+  return expr_type;
 }
 
 ClassDecl::ClassDecl( const std::string & name )
@@ -379,8 +405,13 @@ void ClassDecl::compile( Compiler & compiler )
 
 void ClassDecl::declare_global( TypeContext & ctx )
 {
-  TypeInfo* type_info = ctx.define_type(name);
-    ctx.define_var( name, type_info );
+  TypeInfo * type_info = ctx.define_type( name );
+  ctx.define_var( name, type_info );
+}
+
+bool ClassDecl::check_types( TypeContext & ctx )
+{
+  return true;
 }
 
 Get::Get( Expr * object, const std::string & name )
@@ -394,6 +425,11 @@ void Get::compile( Compiler & compiler )
   object->compile( compiler );
   uint16_t index = compiler.define_global_var( property );
   compiler.code->emit_instr( OP_GET_PROPERTY, index );
+}
+
+TypeInfo * Get::infer_types( TypeContext & ctx )
+{
+  return nullptr;
 }
 
 Set::Set( Expr * object, const std::string & name, Expr * value )
@@ -411,6 +447,11 @@ void Set::compile( Compiler & compiler )
   compiler.code->emit_instr( OP_SET_PROPERTY, index );
 }
 
+TypeInfo * Set::infer_types( TypeContext & ctx )
+{
+  return nullptr;
+}
+
 ExprStmt::ExprStmt( Expr * expr )
     : expr( expr )
 {
@@ -423,7 +464,8 @@ void ExprStmt::compile( Compiler & compiler )
 
 bool ExprStmt::check_types( TypeContext & ctx )
 {
-  return expr->check_types( ctx );
+  ( void ) expr->infer_types( ctx );
+  return true;
 }
 
 TypeContext::TypeContext()
@@ -459,7 +501,7 @@ TypeInfo * TypeContext::lookup_var( const std::string & name )
   return nullptr;
 }
 
-TypeInfo * TypeContext::define_type( const std::string & name, bool forward )
+TypeInfo * TypeContext::define_type( const std::string & name )
 {
   auto it = m_types.find( name );
   if( it != m_types.end() )

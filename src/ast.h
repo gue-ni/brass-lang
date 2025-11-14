@@ -23,7 +23,7 @@ public:
   void pop_scope();
   void define_var( const std::string & name, TypeInfo * type_info );
   TypeInfo * lookup_var( const std::string & name );
-  TypeInfo * define_type( const std::string & name, bool forward = false );
+  TypeInfo * define_type( const std::string & name);
   TypeInfo * lookup_type( const std::string & name );
 
   void throw_type_error( const std::string & msg );
@@ -33,13 +33,14 @@ public:
     return error.empty();
   }
 
-  // TypeInfo*
   std::string error;
 
 private:
-  std::map<std::string, TypeInfo *> m_types; // mapping of type names to TypeInfo*
+  // mapping of type names to TypeInfo*
+  std::map<std::string, TypeInfo *> m_types;
 
-  std::list<std::map<std::string, TypeInfo *>> m_scopes; // mapping of variable names to types
+  // mapping of variable names to types
+  std::list<std::map<std::string, TypeInfo *>> m_scopes;
 };
 
 struct AstNode
@@ -48,29 +49,21 @@ struct AstNode
   {
   }
 
-  virtual void compile( Compiler & );
-
-  virtual bool check_types( TypeContext & ctx )
-  {
-    return true;
-  }
+  virtual void compile( Compiler & ) = 0;
 };
 
 struct Expr : AstNode
 {
-  TypeInfo * type = nullptr;
-  virtual TypeInfo * infer_types( TypeContext & ctx )
-  {
-    return nullptr;
-  }
+  virtual TypeInfo * infer_types( TypeContext & ctx ) = 0;
 };
 
 struct Stmt : AstNode
 {
   virtual void declare_global( TypeContext & ctx )
   {
-    // do nothing
   }
+
+  virtual bool check_types( TypeContext & ctx ) = 0;
 };
 
 struct Literal : Expr
@@ -97,6 +90,7 @@ struct Call : Expr
   std::vector<Expr *> args;
   Call( Expr * callee, const std::vector<Expr *> & args );
   void compile( Compiler & compiler ) override;
+  TypeInfo * infer_types( TypeContext & ctx ) override;
 };
 
 struct Variable : Expr
@@ -132,7 +126,6 @@ struct Assignment : Expr
   Assignment( const std::string & name, Expr * expr );
   void compile( Compiler & compiler ) override;
   TypeInfo * infer_types( TypeContext & ctx ) override;
-  bool check_types( TypeContext & ctx ) override;
 };
 
 struct Program : Stmt
@@ -157,6 +150,7 @@ struct FnDecl : Stmt
   FnDecl( const std::string & name, const std::vector<std::string> & args, Stmt * body );
   void compile( Compiler & compiler ) override;
   void declare_global( TypeContext & ctx ) override;
+  bool check_types( TypeContext & ctx ) override;
 };
 
 struct IfStmt : Stmt
@@ -166,6 +160,7 @@ struct IfStmt : Stmt
   Stmt * else_stmt;
   IfStmt( Expr * cond, Stmt * then, Stmt * otherwise );
   void compile( Compiler & compiler ) override;
+  bool check_types( TypeContext & ctx ) override;
 };
 
 struct WhileStmt : Stmt
@@ -174,6 +169,7 @@ struct WhileStmt : Stmt
   Stmt * body;
   WhileStmt( Expr * cond, Stmt * body );
   void compile( Compiler & compiler ) override;
+  bool check_types( TypeContext & ctx ) override;
 };
 
 struct Print : Stmt
@@ -182,6 +178,7 @@ struct Print : Stmt
   Expr * expr;
   Print( Expr * expr, bool newline = false );
   void compile( Compiler & compiler ) override;
+  bool check_types( TypeContext & ctx ) override;
 };
 
 struct Return : Stmt
@@ -189,6 +186,7 @@ struct Return : Stmt
   Expr * expr;
   Return( Expr * expr );
   void compile( Compiler & compiler ) override;
+  bool check_types( TypeContext & ctx ) override;
 };
 
 struct ClassDecl : Stmt
@@ -197,6 +195,7 @@ struct ClassDecl : Stmt
   ClassDecl( const std::string & name );
   void compile( Compiler & compiler ) override;
   void declare_global( TypeContext & ctx ) override;
+  bool check_types( TypeContext & ctx ) override;
 };
 
 struct Get : Expr
@@ -205,6 +204,7 @@ struct Get : Expr
   std::string property;
   Get( Expr * object, const std::string & name );
   void compile( Compiler & compiler ) override;
+  TypeInfo * infer_types( TypeContext & ctx ) override;
 };
 
 struct Set : Expr
@@ -214,6 +214,7 @@ struct Set : Expr
   Expr * value;
   Set( Expr * object, const std::string & name, Expr * value );
   void compile( Compiler & compiler ) override;
+  TypeInfo * infer_types( TypeContext & ctx ) override;
 };
 
 // basic allocator, should be replaced by a arena allocator

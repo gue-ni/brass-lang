@@ -429,5 +429,5 @@ x = "hello";
   ( void ) eval( src, out, err );
 
   EXPECT_EQ( out.str(), "" );
-  EXPECT_EQ( err.str(), "TYPE ERROR" );
+  EXPECT_EQ( err.str(), "TYPE ERROR: type mismatch in assignment\n" );
 }
