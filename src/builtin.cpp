@@ -11,6 +11,8 @@ Object f_typeof( int argc, Object args[] )
       return Object::String( "nil-type" );
     case Object ::Type ::INTEGER :
       return Object::String( "integer" );
+    case Object ::Type ::STRING :
+      return Object::String( "string" );
     default :
       return Object::String( "unknown type" );
   }

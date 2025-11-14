@@ -346,6 +346,12 @@ Result<Expr> Parser::parse_primary()
     Literal * literal = m_arena.alloc<Literal>( Object::Integer( value ) );
     return make_result<Expr>( literal );
   }
+  else if( match( STRING ) )
+  {
+    std::string str   = previous().lexeme;
+    Literal * literal = m_arena.alloc<Literal>( Object::String( str.c_str() ) );
+    return make_result<Expr>( literal );
+  }
   else if( match( IDENTIFIER ) )
   {
     Variable * var = m_arena.alloc<Variable>( previous().lexeme );
