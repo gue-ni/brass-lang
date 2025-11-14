@@ -30,7 +30,7 @@ TypeInfo * Literal::infer_types( TypeContext & ctx )
         return ctx.define_type( "string" );
       }
     default :
-      assert(false);
+      assert( false );
       return nullptr;
   }
 }
@@ -113,6 +113,7 @@ TypeInfo * Binary::infer_types( TypeContext & ctx )
   }
   else
   {
+    ctx.throw_type_error( "Type mismatch in binary operation" );
     return nullptr;
   }
 }
@@ -131,7 +132,8 @@ void Print::compile( Compiler & compiler )
 
 bool Print::check_types( TypeContext & ctx )
 {
-  return true;
+  TypeInfo * ti = expr->infer_types( ctx );
+  return ti != nullptr;
 }
 
 IfStmt::IfStmt( Expr * cond, Stmt * then_stmt, Stmt * else_stmt )
@@ -245,7 +247,9 @@ void Return::compile( Compiler & compiler )
 
 bool Return::check_types( TypeContext & ctx )
 {
-  return false;
+  // TODO: check if type matches function return value
+  TypeInfo * ti = expr->infer_types( ctx );
+  return ti != nullptr;
 }
 
 Variable::Variable( const std::string & name )
@@ -383,7 +387,7 @@ TypeInfo * Assignment::infer_types( TypeContext & ctx )
 
   if( var_type != expr_type )
   {
-    ctx.throw_type_error( "type mismatch in assignment" );
+    ctx.throw_type_error( "Type mismatch in assignment" );
     return nullptr;
   }
 

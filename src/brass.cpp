@@ -27,6 +27,7 @@ int eval( const char * src, std::ostream & out, std::ostream & err )
   if( !ctx.ok() )
   {
     err << "TYPE ERROR: " << ctx.error << std::endl;
+    return 1;
   }
 
   CodeObject code;
@@ -91,6 +92,7 @@ int repl()
     if( !ctx.ok() )
     {
       std::cerr << "TYPE ERROR: " << ctx.error << std::endl;
+      continue;
     }
 
     ast.node->compile( compiler );

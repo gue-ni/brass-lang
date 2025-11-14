@@ -429,5 +429,17 @@ x = "hello";
   ( void ) eval( src, out, err );
 
   EXPECT_EQ( out.str(), "" );
-  EXPECT_EQ( err.str(), "TYPE ERROR: type mismatch in assignment\n" );
+  EXPECT_EQ( err.str(), "TYPE ERROR: Type mismatch in assignment\n" );
+}
+
+TEST_F( Unittest, test_types_02 )
+{
+  const char * src = R"(
+print 50 + "hello";
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "" );
+  EXPECT_EQ( err.str(), "TYPE ERROR: Type mismatch in binary operation\n" );
 }
