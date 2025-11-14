@@ -1,6 +1,9 @@
 #include "bytecode.h"
 #include "object.h"
 
+// size of a single instruction in bytes
+constexpr size_t INSTR_SIZE = 3;
+
 std::pair<uint8_t, uint8_t> short_to_bytes( uint16_t u16 )
 {
   uint16_t hi = ( u16 >> 8 ) & 0xff;
@@ -39,7 +42,7 @@ size_t CodeObject::emit_jump( OpCode op )
 void CodeObject::end_jump( size_t jump_start )
 {
   size_t jump_end = instructions.size();
-  size_t jump_len = jump_end - ( jump_start + 3 );
+  size_t jump_len = jump_end - ( jump_start + INSTR_SIZE );
 
   auto [hi, lo] = short_to_bytes( jump_len );
 
@@ -49,7 +52,7 @@ void CodeObject::end_jump( size_t jump_start )
 
 void CodeObject::emit_loop( size_t start )
 {
-  size_t end    = instructions.size() + 3;
+  size_t end    = instructions.size() + INSTR_SIZE;
   size_t offset = end - start;
   emit_instr( OP_LOOP, ( uint16_t ) offset );
 }
