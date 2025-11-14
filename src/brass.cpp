@@ -12,16 +12,15 @@ int eval( const char * src, std::ostream & out, std::ostream & err )
 {
   std::vector<Token> tokens = lex( src );
 
+  GarbageCollector gc;
   NodeAllocator allocator;
 
-  Result<Program> result = parse( tokens, allocator );
+  Result<Program> result = parse( tokens, allocator, gc );
   if( !result.ok() )
   {
     err << "PARSER ERROR: " << result.error << std::endl;
     return 1;
   }
-
-  GarbageCollector gc;
 
   CodeObject code;
   compile( result.node, gc, &code );
@@ -40,9 +39,8 @@ std::string repl_header()
 
 int repl()
 {
-  NodeAllocator allocator;
-
   GarbageCollector gc;
+  NodeAllocator allocator;
 
   VirtualMachine vm( std::cout, std::cerr, gc );
 
@@ -74,7 +72,7 @@ int repl()
       continue;
     }
 
-    auto ast = parse( tokens, allocator );
+    auto ast = parse( tokens, allocator, gc );
     if( !ast.ok() )
     {
       std::cerr << ast.error << std::endl;

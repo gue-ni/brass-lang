@@ -2,10 +2,11 @@
 #include "ast.h"
 #include <iostream>
 
-Parser::Parser( const std::vector<Token> & tokens, NodeAllocator & arena )
+Parser::Parser( const std::vector<Token> & tokens, NodeAllocator & arena , GarbageCollector &gc )
     : m_tokens( tokens )
     , m_pos( m_tokens.begin() )
     , m_arena( arena )
+    , m_gc(gc)
 {
 }
 
@@ -349,7 +350,8 @@ Result<Expr> Parser::parse_primary()
   else if( match( STRING ) )
   {
     std::string str   = previous().lexeme;
-    Literal * literal = m_arena.alloc<Literal>( Object::String( str.c_str() ) );
+    StringObject * str_obj = m_gc.alloc< StringObject>(str.c_str());
+    Literal * literal = m_arena.alloc<Literal>( Object::String( str_obj ) );
     return make_result<Expr>( literal );
   }
   else if( match( IDENTIFIER ) )
@@ -458,8 +460,8 @@ bool Parser::is_finished()
   return m_pos == m_tokens.end();
 }
 
-Result<Program> parse( const std::vector<Token> & tokens, NodeAllocator & allocator )
+Result<Program> parse( const std::vector<Token> & tokens, NodeAllocator & allocator,  GarbageCollector &gc  )
 {
-  Parser parser( tokens, allocator );
+  Parser parser( tokens, allocator, gc );
   return parser.run();
 }

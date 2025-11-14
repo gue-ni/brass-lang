@@ -9,7 +9,16 @@
 
 class Object;
 
-typedef Object ( *NativeFunction )( int, Object[] );
+class VirtualMachine;
+
+typedef Object ( *NativeFunction )( VirtualMachine *, int, Object[] );
+
+struct StringObject : public GarbageCollected
+{
+  char * str;
+  StringObject( const char * s );
+  ~StringObject();
+};
 
 struct FunctionObject : public GarbageCollected
 {
@@ -78,7 +87,7 @@ public:
   static Object Boolean( bool );
   static Object Integer( int );
   static Object Real( double );
-  static Object String( const char * );
+  static Object String( StringObject * );
   static Object Function( FunctionObject * );
   static Object Native( NativeFunction );
   static Object Class( ClassObject * );
@@ -90,7 +99,7 @@ public:
     bool boolean;
     int integer;
     double real;
-    char * string;
+    StringObject * string;
     ListObject * list;
     MapObject * map;
     FunctionObject * function;

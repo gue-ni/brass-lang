@@ -10,13 +10,14 @@
 class Parser
 {
 public:
-  Parser( const std::vector<Token> & tokens, NodeAllocator & arena );
+  Parser( const std::vector<Token> & tokens, NodeAllocator & arena, GarbageCollector &gc );
   Result<Program> run();
 
 private:
   const std::vector<Token> m_tokens;
   std::vector<Token>::const_iterator m_pos;
   NodeAllocator & m_arena;
+  GarbageCollector & m_gc;
 
   Result<Stmt> parse_statement();
   Result<Stmt> parse_fn_decl();
@@ -43,4 +44,4 @@ private:
   bool is_finished();
 };
 
-Result<Program> parse( const std::vector<Token> & tokens, NodeAllocator & allocator );
+Result<Program> parse( const std::vector<Token> & tokens, NodeAllocator & allocator ,  GarbageCollector &gc );

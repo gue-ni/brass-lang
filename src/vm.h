@@ -29,6 +29,7 @@ class VirtualMachine
 public:
   VirtualMachine( std::ostream & out, std::ostream & err, GarbageCollector & gc );
   int run( CodeObject * );
+  GarbageCollector& gc() { return m_gc; }
 
 private:
   bool m_exit = false;

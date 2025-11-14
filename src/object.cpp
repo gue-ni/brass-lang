@@ -37,11 +37,11 @@ Object Object::Real( double value )
   return obj;
 }
 
-Object Object::String( const char * value )
+Object Object::String( StringObject * value )
 {
   Object obj;
   obj.type   = STRING;
-  obj.string = STRDUP( value );
+  obj.string = value;
   return obj;
 }
 
@@ -95,7 +95,7 @@ bool Object::is_truthy() const
     case Object::REAL :
       return real != 0;
     case Object::STRING :
-      return string != nullptr && 0 < strlen( string );
+      return ( string != nullptr ) && ( string->str != nullptr ) && ( 0 < strlen( string->str ) );
     case Object::LIST :
     case Object::MAP :
     case Object::FUNCTION :
@@ -153,7 +153,7 @@ std::ostream & operator<<( std::ostream & os, const Object & obj )
       os << obj.real;
       break;
     case Object::Type::STRING :
-      os << obj.string;
+      os << obj.string->str;
       break;
     case Object::Type::FUNCTION :
       os << "function<" << obj.function->name << ">";
@@ -169,4 +169,18 @@ std::ostream & operator<<( std::ostream & os, const Object & obj )
       break;
   }
   return os;
+}
+
+StringObject::StringObject( const char * s )
+    : str( STRDUP( s ) )
+{
+}
+
+StringObject::~StringObject()
+{
+  if( str )
+  {
+    free( str );
+    str = nullptr;
+  }
 }

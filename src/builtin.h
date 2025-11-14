@@ -2,4 +2,6 @@
 
 #include "object.h"
 
-Object f_typeof( int argc, Object args[] );
+class VirtualMachine;
+
+Object f_typeof( VirtualMachine*, int argc, Object args[] );

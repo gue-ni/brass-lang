@@ -1,19 +1,27 @@
 #include "builtin.h"
+#include "vm.h"
 #include <cassert>
 
-Object f_typeof( int argc, Object args[] )
+Object f_typeof( VirtualMachine * vm, int argc, Object args[] )
 {
   assert( argc == 1 );
   Object arg0 = args[0];
+  StringObject * str;
   switch( arg0.type )
   {
     case Object ::Type ::NIL :
-      return Object::String( "nil-type" );
+      str = vm->gc().alloc<StringObject>( "niltype" );
+      break;
     case Object ::Type ::INTEGER :
-      return Object::String( "integer" );
+      str = vm->gc().alloc<StringObject>( "integer" );
+      break;
     case Object ::Type ::STRING :
-      return Object::String( "string" );
+      str = vm->gc().alloc<StringObject>( "string" );
+      break;
     default :
-      return Object::String( "unknown type" );
+      str = vm->gc().alloc<StringObject>( "unknown-type" );
+      break;
   }
+
+  return Object::String( str );
 }

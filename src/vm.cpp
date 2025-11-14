@@ -162,7 +162,7 @@ int VirtualMachine::run( CodeObject * co )
             size_t bp         = stack_size - fn_arity;
             Object * fn_args  = &m_stack[bp];
 
-            Object retval = fn( fn_arity, fn_args );
+            Object retval = fn( this, fn_arity, fn_args );
             push( retval );
           }
           else
