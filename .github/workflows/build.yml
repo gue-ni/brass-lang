@@ -30,3 +30,10 @@ jobs:
     - name: Test
       working-directory: ${{github.workspace}}/build
       run: ./tests/tests
+
+    - name: Run Scripts
+      run: |
+        for file in ${{ github.workspace }}/tests/programs/*.bs; do
+          echo "Executing $file"
+          time ${{ github.workspace }}/build/src/brass $file
+        done

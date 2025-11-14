@@ -29,7 +29,6 @@ private:
   Result<Stmt> parse_if();
 
   Result<Expr> parse_expression();
-  Result<Expr> parse_expr();
   Result<Expr> parse_primary();
   Result<Expr> parse_unary();
   Result<Expr> parse_term();
