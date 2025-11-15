@@ -597,7 +597,21 @@ TypeContext::TypeContext()
 {
   // builtin types
   ( void ) define_type( "int" );
+  ( void ) define_type( "bool" );
+  ( void ) define_type( "float" );
   ( void ) define_type( "string" );
+}
+
+TypeContext::~TypeContext()
+{
+  for( auto & tmp : m_types )
+  {
+    TypeInfo * ti = tmp.second;
+    if( ti )
+    {
+      delete ti;
+    }
+  }
 }
 
 void TypeContext::push_scope()

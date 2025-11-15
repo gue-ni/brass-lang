@@ -32,6 +32,7 @@ class TypeContext
 {
 public:
   TypeContext();
+  ~TypeContext();
   void push_scope();
   void pop_scope();
   void define_var( const std::string & name, TypeInfo * type_info );
