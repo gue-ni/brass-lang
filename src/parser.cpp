@@ -82,23 +82,42 @@ Result<Stmt> Parser::parse_fn_decl()
   if( !match( LPAREN ) )
     return make_error<Stmt>( "Expected '(' after function name" );
 
-  std::vector<std::string> args;
+  std::vector<FnArgDecl> args;
 
   do
   {
-    if( peek().type == RPAREN )
+
+    if( match( RPAREN ) )
       break;
 
     if( !match( IDENTIFIER ) )
       return make_error<Stmt>( "Expected identifier" );
 
-    args.push_back( previous().lexeme );
+    std::string arg_var_name = previous().lexeme;
+
+    if( !match( COLON ) )
+      return make_error<Stmt>( "Expected ':'" );
+
+    if( !match( IDENTIFIER ) )
+      return make_error<Stmt>( "Expected identifier" );
+
+    std::string arg_type_name = previous().lexeme;
+
+    args.push_back( { arg_var_name, arg_type_name } );
 
     ( void ) match( COMMA );
   } while( !is_finished() );
 
-  if( !match( RPAREN ) )
-    return make_error<Stmt>( "Expected ')'" );
+  // if( !match( RPAREN ) )
+  // return make_error<Stmt>( "Expected ')'" );
+
+  if( !match( COLON ) )
+    return make_error<Stmt>( "Expected ':'" );
+
+  if( !match( IDENTIFIER ) )
+    return make_error<Stmt>( "Expected return type identifier" );
+
+  std::string return_type = previous().lexeme;
 
   if( !match( LBRACE ) )
     return make_error<Stmt>( "Expected '{'" );
@@ -108,15 +127,24 @@ Result<Stmt> Parser::parse_fn_decl()
   if( !body.ok() )
     return make_error<Stmt>( body.error );
 
-  return make_result<Stmt>( m_arena.alloc<FnDecl>( fn_name, args, body.node ) );
+  return make_result<Stmt>( m_arena.alloc<FnDecl>( fn_name, args, return_type, body.node ) );
 }
 
 Result<Stmt> Parser::parse_var_decl()
 {
   if( !match( IDENTIFIER ) )
-    return make_error<Stmt>( "Expected identifier in variable declaration" );
+    return make_error<Stmt>( "Expected variable identifier in variable declaration" );
 
-  std::string name = previous().lexeme;
+  std::string var_name  = previous().lexeme;
+  std::string type_name = "";
+
+  if( match( COLON ) )
+  {
+    if( !match( IDENTIFIER ) )
+      return make_error<Stmt>( "Expected type identifier after ':'" );
+
+    type_name = previous().lexeme;
+  }
 
   if( !match( EQUAL ) )
     return make_error<Stmt>( "Expected '=' in variable declaration" );
@@ -128,7 +156,7 @@ Result<Stmt> Parser::parse_var_decl()
   if( !match( SEMICOLON ) )
     return make_error<Stmt>( "Expected ';' after variable declaration" );
 
-  return make_result<Stmt>( m_arena.alloc<VariableDecl>( name, expr.node ) );
+  return make_result<Stmt>( m_arena.alloc<VariableDecl>( var_name, type_name, expr.node ) );
 }
 
 Result<Expr> Parser::parse_assignment()
@@ -242,10 +270,34 @@ Result<Stmt> Parser::parse_class_decl()
   if( !match( LBRACE ) )
     return make_error<Stmt>( "Expected '{' after class name" );
 
-  if( !match( RBRACE ) )
-    return make_error<Stmt>( "Expected '}' after class declaration" );
+  std::vector<ClassFieldDecl> fields;
 
-  return make_result<Stmt>( m_arena.alloc<ClassDecl>( name.c_str() ) );
+  do
+  {
+    if( match( RBRACE ) )
+      break;
+
+    if( match( IDENTIFIER ) )
+    {
+      std::string field_name = previous().lexeme;
+
+      if( !match( COLON ) )
+        return make_error<Stmt>( "Expected ':' after field name" );
+
+      if( !match( IDENTIFIER ) )
+        return make_error<Stmt>( "Expected field name identifier" );
+
+      std::string field_type = previous().lexeme;
+
+      if( !match( SEMICOLON ) )
+        return make_error<Stmt>( "Expected ';' after field declaration" );
+
+      fields.push_back( { field_name, field_type } );
+    }
+
+  } while( !is_finished() );
+
+  return make_result<Stmt>( m_arena.alloc<ClassDecl>( name.c_str(), fields ) );
 }
 
 Result<Stmt> Parser::parse_block()

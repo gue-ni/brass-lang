@@ -1,0 +1,15 @@
+class Square {
+  w: int;
+  h: int;
+}
+
+var sq = Square();
+
+sq.w = 2;
+sq.h = 3;
+
+fn area(s: Square) : int {
+  return s.w * s.h;
+}
+
+print area(sq);

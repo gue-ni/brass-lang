@@ -22,6 +22,14 @@ int eval( const char * src, std::ostream & out, std::ostream & err )
     return 1;
   }
 
+  TypeContext ctx;
+  result.node->check_types( ctx );
+  if( !ctx.ok() )
+  {
+    err << "TYPE ERROR: " << ctx.error << std::endl;
+    return 1;
+  }
+
   CodeObject code;
   compile( result.node, gc, &code );
 
@@ -76,6 +84,14 @@ int repl()
     if( !ast.ok() )
     {
       std::cerr << ast.error << std::endl;
+      continue;
+    }
+
+    TypeContext ctx;
+    ast.node->check_types( ctx );
+    if( !ctx.ok() )
+    {
+      std::cerr << "TYPE ERROR: " << ctx.error << std::endl;
       continue;
     }
 
