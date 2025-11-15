@@ -22,6 +22,7 @@ enum TokenType : uint
   EQUAL,
   EQUAL_EQUAL,
   DOT,
+  COLON,
 
   KW_IF,
   KW_ELSE,

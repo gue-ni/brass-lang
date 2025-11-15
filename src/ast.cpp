@@ -23,11 +23,11 @@ TypeInfo * Literal::infer_types( TypeContext & ctx )
   {
     case Object ::Type ::INTEGER :
       {
-        return ctx.define_type( "integer" );
+        return ctx.lookup_type( "int" );
       }
     case Object ::Type ::STRING :
       {
-        return ctx.define_type( "string" );
+        return ctx.lookup_type( "string" );
       }
     default :
       assert( false );
@@ -51,7 +51,10 @@ bool Program::check_types( TypeContext & ctx )
   ctx.push_scope();
   for( Stmt * stmt : stmts )
   {
-    stmt->declare_global( ctx ); // if
+    if( !stmt->declare_global( ctx ) )
+    {
+      return false;
+    }
   }
 
   for( Stmt * stmt : stmts )
@@ -193,9 +196,11 @@ bool WhileStmt::check_types( TypeContext & ctx )
   return false;
 }
 
-FnDecl::FnDecl( const std::string & name, const std::vector<std::string> & args, Stmt * body )
+FnDecl::FnDecl(
+    const std::string & name, const std::vector<FnArgDecl> & args, const std::string & return_type, Stmt * body )
     : name( name )
     , args( args )
+    , return_type( return_type )
     , body( body )
 {
 }
@@ -214,9 +219,9 @@ void FnDecl::compile( Compiler & compiler )
   compiler.code = &fn->code_object;
   compiler.push_scope();
 
-  for( const std::string & arg : args )
+  for( const auto & arg : args )
   {
-    uint16_t tmp = compiler.define_var( arg );
+    uint16_t tmp = compiler.define_var( arg.name );
   }
 
   body->compile( compiler );
@@ -225,16 +230,36 @@ void FnDecl::compile( Compiler & compiler )
   compiler.code = global;
 }
 
-void FnDecl::declare_global( TypeContext & ctx )
+bool FnDecl::declare_global( TypeContext & ctx )
 {
-  // TODO
-  TypeInfo * retval;
-  std::vector<TypeInfo *> args;
+  TypeInfo * retval = ctx.lookup_type( return_type ); 
+  std::string type_name;
+  std::vector<TypeInfo *> arg_types;
+
+  for( const auto & arg : args )
+  {
+    TypeInfo * tmp = ctx.lookup_type( arg.type );
+    arg_types.push_back( tmp );
+
+    if( !type_name.empty() )
+      type_name += ", ";
+
+    type_name += tmp->name;
+  }
+
+  type_name = "(" + type_name + ") -> " + retval->name;
+
+  TypeInfo * fn_type   = ctx.define_type( type_name );
+  fn_type->arg_types   = arg_types;
+  fn_type->return_type = retval;
+
+  ctx.define_var( name, fn_type );
+  return true;
 }
 
 bool FnDecl::check_types( TypeContext & ctx )
 {
-  return false;
+  return true;
 }
 
 Return::Return( Expr * expr )
@@ -294,8 +319,31 @@ void Call::compile( Compiler & compiler )
 
 TypeInfo * Call::infer_types( TypeContext & ctx )
 {
-  TypeInfo * ti = callee->infer_types( ctx );
-  return ti;
+  TypeInfo * fn_type = callee->infer_types( ctx );
+  if( !fn_type )
+  {
+    ctx.throw_type_error( "Undeclared function type" );
+    return nullptr;
+  }
+
+  if( fn_type->arg_types.size() != args.size() )
+  {
+    ctx.throw_type_error( "Arity mismatch in function call" );
+    return nullptr;
+  }
+
+  for( size_t i = 0; i < args.size(); i++ )
+  {
+    TypeInfo * arg_type = args[i]->infer_types( ctx );
+    if( arg_type != fn_type->arg_types[i] )
+    {
+      ctx.throw_type_error(
+          "Invalid argument of type '" + arg_type->name + "', expected '" + fn_type->arg_types[i]->name + "'" );
+      return nullptr;
+    }
+  }
+
+  return fn_type->return_type;
 }
 
 void Block::compile( Compiler & compiler )
@@ -313,8 +361,9 @@ bool Block::check_types( TypeContext & ctx )
   return false;
 }
 
-VariableDecl::VariableDecl( const std::string & name, Expr * expr )
-    : name( name )
+VariableDecl::VariableDecl( const std::string & var_name, const std::string & type_name, Expr * expr )
+    : var_name( var_name )
+    , type_name( type_name )
     , expr( expr )
 {
 }
@@ -322,7 +371,7 @@ VariableDecl::VariableDecl( const std::string & name, Expr * expr )
 void VariableDecl::compile( Compiler & compiler )
 {
   expr->compile( compiler );
-  uint16_t index = compiler.define_var( name );
+  uint16_t index = compiler.define_var( var_name );
   bool global    = compiler.scopes.size() == 1;
   compiler.code->emit_instr( global ? OP_STORE_GLOBAL : OP_STORE_LOCAL, index );
 }
@@ -330,8 +379,7 @@ void VariableDecl::compile( Compiler & compiler )
 bool VariableDecl::check_types( TypeContext & ctx )
 {
   // TODO: check if the variable was declard before this should throw an error
-  TypeInfo * a = ctx.lookup_var( name ); // TODO: should also return whether it is global
-
+  TypeInfo * a = ctx.lookup_var( var_name ); // TODO: should also return whether it is global
   if( a->declard )
   {
     ctx.throw_type_error( "was already declared" );
@@ -341,26 +389,48 @@ bool VariableDecl::check_types( TypeContext & ctx )
     a->declard = true;
   }
 
-  TypeInfo * b = expr->infer_types( ctx );
-
-  if( a != b )
+  TypeInfo * decl_type = nullptr;
+  if( !type_name.empty() )
   {
-    ctx.throw_type_error( "balksdf" );
+    decl_type = ctx.lookup_type( type_name );
+  }
+
+  TypeInfo * infered_type = expr->infer_types( ctx );
+
+  if( decl_type && decl_type != infered_type )
+  {
+    ctx.throw_type_error( "Type mismatch in variable declaration" );
     return false;
   }
   else
   {
+    ctx.define_var( var_name, infered_type );
     return true;
   }
 }
 
-void VariableDecl::declare_global( TypeContext & ctx )
+bool VariableDecl::declare_global( TypeContext & ctx )
 {
   TypeInfo * expr_type = expr->infer_types( ctx );
+
+  TypeInfo * decl_type = nullptr;
+
+  if( !type_name.empty() )
+  {
+    decl_type = ctx.lookup_type( type_name );
+  }
+
+  if( decl_type && expr_type != decl_type )
+  {
+    ctx.throw_type_error( "Declared type does not match infered type" );
+    return false;
+  }
+
   if( expr_type )
   {
-    ctx.define_var( name, expr_type );
+    ctx.define_var( var_name, expr_type );
   }
+  return true;
 }
 
 Assignment::Assignment( const std::string & name, Expr * expr )
@@ -410,10 +480,20 @@ void ClassDecl::compile( Compiler & compiler )
   compiler.code->emit_instr( OP_STORE_GLOBAL, index );
 }
 
-void ClassDecl::declare_global( TypeContext & ctx )
+bool ClassDecl::declare_global( TypeContext & ctx )
 {
   TypeInfo * type_info = ctx.define_type( name );
   ctx.define_var( name, type_info );
+
+
+  std::string ctor_type_name = "() -> " + name;
+
+  TypeInfo* ctor_type = ctx.define_type(ctor_type_name);
+  ctor_type->arg_types = {};
+  ctor_type->return_type = type_info;
+
+  ctx.define_var(name, ctor_type);
+  return true;
 }
 
 bool ClassDecl::check_types( TypeContext & ctx )
@@ -477,6 +557,9 @@ bool ExprStmt::check_types( TypeContext & ctx )
 
 TypeContext::TypeContext()
 {
+  // builtin types
+  ( void ) define_type( "int" );
+  ( void ) define_type( "string" );
 }
 
 void TypeContext::push_scope()
@@ -525,7 +608,15 @@ TypeInfo * TypeContext::define_type( const std::string & name )
 
 TypeInfo * TypeContext::lookup_type( const std::string & name )
 {
-  return nullptr;
+  auto it = m_types.find( name );
+  if( it != m_types.end() )
+  {
+    return it->second;
+  }
+  else
+  {
+    return nullptr;
+  }
 }
 
 void TypeContext::throw_type_error( const std::string & msg )
@@ -533,7 +624,8 @@ void TypeContext::throw_type_error( const std::string & msg )
   error = msg;
 }
 
-void Stmt::declare_global( TypeContext & ctx )
+bool Stmt::declare_global( TypeContext & ctx )
 {
   // do nothing
+  return true;
 }

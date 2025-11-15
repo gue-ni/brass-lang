@@ -11,17 +11,17 @@ struct TypeInfo
   bool declard = false;
 
   // only needed for functions
-  TypeInfo * retval;
-  std::vector<TypeInfo *> args;
+  TypeInfo * return_type;
+  std::vector<TypeInfo *> arg_types;
 
   bool is_callable() const
   {
-    return retval != nullptr;
+    return return_type != nullptr;
   }
 
   TypeInfo( const std::string & info )
       : name( info )
-      , retval( nullptr )
+      , return_type( nullptr )
   {
   }
 };
@@ -70,7 +70,7 @@ struct Expr : AstNode
 
 struct Stmt : AstNode
 {
-  virtual void declare_global( TypeContext & ctx );
+  virtual bool declare_global( TypeContext & ctx );
   virtual bool check_types( TypeContext & ctx ) = 0;
 };
 
@@ -119,12 +119,13 @@ struct ExprStmt : Stmt
 
 struct VariableDecl : Stmt
 {
-  std::string name;
+  std::string var_name;
+  std::string type_name;
   Expr * expr;
-  VariableDecl( const std::string & name, Expr * expr );
+  VariableDecl( const std::string & var_name,const std::string& type_name, Expr * expr );
   void compile( Compiler & compiler ) override;
   bool check_types( TypeContext & ctx ) override;
-  void declare_global( TypeContext & ctx ) override;
+  bool declare_global( TypeContext & ctx ) override;
 };
 
 struct Assignment : Expr
@@ -150,15 +151,20 @@ struct Block : Stmt
   bool check_types( TypeContext & ctx ) override;
 };
 
+struct FnArgDecl {
+  std::string name;
+  std::string type;
+};
+
 struct FnDecl : Stmt
 {
   std::string name;
-  std::vector<std::string> args;
-  std::string retval;
+  std::vector<FnArgDecl> args;
+  std::string return_type;;
   Stmt * body;
-  FnDecl( const std::string & name, const std::vector<std::string> & args, Stmt * body );
+  FnDecl( const std::string & name, const std::vector<FnArgDecl> & args, const std::string& return_type, Stmt * body );
   void compile( Compiler & compiler ) override;
-  void declare_global( TypeContext & ctx ) override;
+  bool declare_global( TypeContext & ctx ) override;
   bool check_types( TypeContext & ctx ) override;
 };
 
@@ -203,7 +209,7 @@ struct ClassDecl : Stmt
   std::string name;
   ClassDecl( const std::string & name );
   void compile( Compiler & compiler ) override;
-  void declare_global( TypeContext & ctx ) override;
+  bool declare_global( TypeContext & ctx ) override;
   bool check_types( TypeContext & ctx ) override;
 };
 
