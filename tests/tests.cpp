@@ -242,7 +242,9 @@ print foo.bar;
 TEST_F( Unittest, test_class_03 )
 {
   const char * src = R"(
-class Foo {}
+class Foo {
+  bar: int;
+}
 
 var foo = Foo();
 
@@ -260,7 +262,10 @@ print foo.bar;
 TEST_F( Unittest, test_class_04 )
 {
   const char * src = R"(
-class Square {}
+class Square {
+  w: int;
+  h: int;
+}
 
 var sq = Square();
 

@@ -10,6 +10,8 @@ struct TypeInfo
   std::string name;
   bool declard = false;
 
+  std::map<std::string, TypeInfo *> field_types;
+
   // only needed for functions
   TypeInfo * return_type;
   std::vector<TypeInfo *> arg_types;
@@ -122,7 +124,7 @@ struct VariableDecl : Stmt
   std::string var_name;
   std::string type_name;
   Expr * expr;
-  VariableDecl( const std::string & var_name,const std::string& type_name, Expr * expr );
+  VariableDecl( const std::string & var_name, const std::string & type_name, Expr * expr );
   void compile( Compiler & compiler ) override;
   bool check_types( TypeContext & ctx ) override;
   bool declare_global( TypeContext & ctx ) override;
@@ -151,7 +153,8 @@ struct Block : Stmt
   bool check_types( TypeContext & ctx ) override;
 };
 
-struct FnArgDecl {
+struct FnArgDecl
+{
   std::string name;
   std::string type;
 };
@@ -160,9 +163,9 @@ struct FnDecl : Stmt
 {
   std::string name;
   std::vector<FnArgDecl> args;
-  std::string return_type;;
+  std::string return_type;
   Stmt * body;
-  FnDecl( const std::string & name, const std::vector<FnArgDecl> & args, const std::string& return_type, Stmt * body );
+  FnDecl( const std::string & name, const std::vector<FnArgDecl> & args, const std::string & return_type, Stmt * body );
   void compile( Compiler & compiler ) override;
   bool declare_global( TypeContext & ctx ) override;
   bool check_types( TypeContext & ctx ) override;
@@ -204,10 +207,18 @@ struct Return : Stmt
   bool check_types( TypeContext & ctx ) override;
 };
 
+struct ClassFieldDecl
+{
+  std::string name;
+  std::string type;
+};
+
 struct ClassDecl : Stmt
 {
   std::string name;
+  std::vector<ClassFieldDecl> fields;
   ClassDecl( const std::string & name );
+  ClassDecl( const std::string & name, const std::vector<ClassFieldDecl> & fields );
   void compile( Compiler & compiler ) override;
   bool declare_global( TypeContext & ctx ) override;
   bool check_types( TypeContext & ctx ) override;

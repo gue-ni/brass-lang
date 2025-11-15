@@ -232,7 +232,7 @@ void FnDecl::compile( Compiler & compiler )
 
 bool FnDecl::declare_global( TypeContext & ctx )
 {
-  TypeInfo * retval = ctx.lookup_type( return_type ); 
+  TypeInfo * retval = ctx.lookup_type( return_type );
   std::string type_name;
   std::vector<TypeInfo *> arg_types;
 
@@ -472,6 +472,12 @@ ClassDecl::ClassDecl( const std::string & name )
 {
 }
 
+ClassDecl::ClassDecl( const std::string & name, const std::vector<ClassFieldDecl> & fields )
+    : name( name )
+    , fields( fields )
+{
+}
+
 void ClassDecl::compile( Compiler & compiler )
 {
   ClassObject * cls = compiler.gc.alloc<ClassObject>( name.c_str() );
@@ -485,14 +491,18 @@ bool ClassDecl::declare_global( TypeContext & ctx )
   TypeInfo * type_info = ctx.define_type( name );
   ctx.define_var( name, type_info );
 
+  for( const auto & field : fields )
+  {
+    type_info->field_types[field.name] = ctx.lookup_type( field.type );
+  }
 
   std::string ctor_type_name = "() -> " + name;
 
-  TypeInfo* ctor_type = ctx.define_type(ctor_type_name);
-  ctor_type->arg_types = {};
+  TypeInfo * ctor_type   = ctx.define_type( ctor_type_name );
+  ctor_type->arg_types   = {};
   ctor_type->return_type = type_info;
 
-  ctx.define_var(name, ctor_type);
+  ctx.define_var( name, ctor_type );
   return true;
 }
 
@@ -516,7 +526,16 @@ void Get::compile( Compiler & compiler )
 
 TypeInfo * Get::infer_types( TypeContext & ctx )
 {
-  return nullptr;
+  TypeInfo * a = object->infer_types( ctx );
+  auto it      = a->field_types.find( property );
+  if( it != a->field_types.end() )
+  {
+    return it->second;
+  }
+  else
+  {
+    return nullptr;
+  }
 }
 
 Set::Set( Expr * object, const std::string & name, Expr * value )
@@ -536,7 +555,26 @@ void Set::compile( Compiler & compiler )
 
 TypeInfo * Set::infer_types( TypeContext & ctx )
 {
-  return nullptr;
+
+  TypeInfo * a = object->infer_types( ctx );
+  TypeInfo * b = value->infer_types( ctx );
+
+  auto it = a->field_types.find( property );
+  if( it == a->field_types.end() )
+  {
+    ctx.throw_type_error( "Tried to access not existant field '" + property + "'" );
+    return nullptr;
+  }
+
+  TypeInfo * c = it->second;
+
+  if( c != b )
+  {
+    ctx.throw_type_error( "Type mismatch in setter" );
+    return nullptr;
+  }
+
+  return b;
 }
 
 ExprStmt::ExprStmt( Expr * expr )
