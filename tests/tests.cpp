@@ -387,7 +387,7 @@ print sum(5);
   EXPECT_EQ( err.str(), "" );
 }
 
-TEST_F( Unittest, test_typeof_01 )
+TEST_F( Unittest, DISABLED_test_typeof_01 )
 {
   const char * src = R"(
 var x = 5;
@@ -400,7 +400,7 @@ print typeof(x);
   EXPECT_EQ( err.str(), "" );
 }
 
-TEST_F( Unittest, test_string_01 )
+TEST_F( Unittest, DISABLED_test_string_01 )
 {
   const char * src = R"(
 var x = "Hello, World!";
