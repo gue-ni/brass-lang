@@ -11,6 +11,16 @@ using uint = unsigned int;
 #define STRDUP( x ) strdup( x )
 #endif
 
+struct FLOC
+{
+  int ln, col;
+  FLOC()
+      : ln( 0 )
+      , col( 0 )
+  {
+  }
+};
+
 template <typename NodeType>
 struct Result
 {

@@ -35,10 +35,10 @@ Result<Stmt> Parser::parse_statement()
 
     Result<Expr> expr = parse_expression();
     if( !expr.ok() )
-      return make_error<Stmt>( expr.error );
+      return make_error<Stmt>( previous().meta() + expr.error );
 
     if( !match( SEMICOLON ) )
-      return make_error<Stmt>( "Expected ';' after 'print' statement" );
+      return make_error<Stmt>( previous().meta() + "Expected ';' after 'print' statement" );
 
     return make_result<Stmt>( m_gc.alloc<Print>( expr.node, newline ) );
   }
@@ -46,10 +46,10 @@ Result<Stmt> Parser::parse_statement()
   {
     Result<Expr> expr = parse_expression();
     if( !expr.ok() )
-      return make_error<Stmt>( expr.error );
+      return make_error<Stmt>( previous().meta() + expr.error );
 
     if( !match( SEMICOLON ) )
-      return make_error<Stmt>( "Expected ';' after 'return' statement" );
+      return make_error<Stmt>( previous().meta() + "Expected ';' after 'return' statement" );
 
     return make_result<Stmt>( m_gc.alloc<Return>( expr.node ) );
   }
@@ -74,12 +74,12 @@ Result<Stmt> Parser::parse_statement()
 Result<Stmt> Parser::parse_fn_decl()
 {
   if( !match( IDENTIFIER ) )
-    return make_error<Stmt>( "Expected identifier after 'fn'" );
+    return make_error<Stmt>( previous().meta() + "Expected identifier after 'fn'" );
 
   std::string fn_name = previous().lexeme;
 
   if( !match( LPAREN ) )
-    return make_error<Stmt>( "Expected '(' after function name" );
+    return make_error<Stmt>( previous().meta() + "Expected '(' after function name" );
 
   std::vector<FnArgDecl> args;
 
@@ -90,15 +90,15 @@ Result<Stmt> Parser::parse_fn_decl()
       break;
 
     if( !match( IDENTIFIER ) )
-      return make_error<Stmt>( "Expected identifier" );
+      return make_error<Stmt>( previous().meta() + "Expected identifier" );
 
     std::string arg_var_name = previous().lexeme;
 
     if( !match( COLON ) )
-      return make_error<Stmt>( "Expected ':'" );
+      return make_error<Stmt>( previous().meta() + "Expected ':'" );
 
     if( !match( IDENTIFIER ) )
-      return make_error<Stmt>( "Expected identifier" );
+      return make_error<Stmt>( previous().meta() + "Expected identifier" );
 
     std::string arg_type_name = previous().lexeme;
 
@@ -108,23 +108,23 @@ Result<Stmt> Parser::parse_fn_decl()
   } while( !is_finished() );
 
   // if( !match( RPAREN ) )
-  // return make_error<Stmt>( "Expected ')'" );
+  // return make_error<Stmt>(previous().meta() +  "Expected ')'" );
 
   if( !match( COLON ) )
-    return make_error<Stmt>( "Expected ':'" );
+    return make_error<Stmt>( previous().meta() + "Expected ':'" );
 
   if( !match( IDENTIFIER ) )
-    return make_error<Stmt>( "Expected return type identifier" );
+    return make_error<Stmt>( previous().meta() + "Expected return type identifier" );
 
   std::string return_type = previous().lexeme;
 
   if( !match( LBRACE ) )
-    return make_error<Stmt>( "Expected '{'" );
+    return make_error<Stmt>( previous().meta() + "Expected '{'" );
 
   auto body = parse_block();
 
   if( !body.ok() )
-    return make_error<Stmt>( body.error );
+    return make_error<Stmt>( previous().meta() + body.error );
 
   return make_result<Stmt>( m_gc.alloc<FnDecl>( fn_name, args, return_type, body.node ) );
 }
@@ -132,7 +132,7 @@ Result<Stmt> Parser::parse_fn_decl()
 Result<Stmt> Parser::parse_var_decl()
 {
   if( !match( IDENTIFIER ) )
-    return make_error<Stmt>( "Expected variable identifier in variable declaration" );
+    return make_error<Stmt>( previous().meta() + "Expected variable identifier in variable declaration" );
 
   std::string var_name  = previous().lexeme;
   std::string type_name = "";
@@ -140,20 +140,20 @@ Result<Stmt> Parser::parse_var_decl()
   if( match( COLON ) )
   {
     if( !match( IDENTIFIER ) )
-      return make_error<Stmt>( "Expected type identifier after ':'" );
+      return make_error<Stmt>( previous().meta() + "Expected type identifier after ':'" );
 
     type_name = previous().lexeme;
   }
 
   if( !match( EQUAL ) )
-    return make_error<Stmt>( "Expected '=' in variable declaration" );
+    return make_error<Stmt>( previous().meta() + "Expected '=' in variable declaration" );
 
   auto expr = parse_expression();
   if( !expr.ok() )
-    return make_error<Stmt>( expr.error );
+    return make_error<Stmt>( previous().meta() + expr.error );
 
   if( !match( SEMICOLON ) )
-    return make_error<Stmt>( "Expected ';' after variable declaration" );
+    return make_error<Stmt>( previous().meta() + "Expected ';' after variable declaration" );
 
   return make_result<Stmt>( m_gc.alloc<VariableDecl>( var_name, type_name, expr.node ) );
 }
@@ -162,7 +162,7 @@ Result<Expr> Parser::parse_assignment()
 {
   auto expr = parse_term();
   if( !expr.ok() )
-    return make_error<Expr>( expr.error );
+    return make_error<Expr>(previous().meta() +  expr.error );
 
   if( match( EQUAL ) )
   {
@@ -179,7 +179,7 @@ Result<Expr> Parser::parse_assignment()
       return make_result<Expr>( m_gc.alloc<Set>( get->object, get->property, value.node ) );
     }
 
-    return make_error<Expr>( "assigment not impelmented" );
+    return make_error<Expr>(previous().meta() +  "assigment not impelmented" );
   }
   else
   {
@@ -191,7 +191,7 @@ Result<Expr> Parser::parse_call()
 {
   auto expr = parse_primary();
   if( !expr.ok() )
-    return make_error<Expr>( expr.error );
+    return make_error<Expr>(previous().meta() +  expr.error );
 
   if( match( LPAREN ) )
   {
@@ -216,7 +216,7 @@ Result<Expr> Parser::parse_call()
 
     if( !match( RPAREN ) )
     {
-      return make_error<Expr>( "Expected ')'" );
+      return make_error<Expr>(previous().meta() +  "Expected ')'" );
     }
 
     Call * fn_call = m_gc.alloc<Call>( expr.node, args );
@@ -226,7 +226,7 @@ Result<Expr> Parser::parse_call()
   {
     if( !match( IDENTIFIER ) )
     {
-      return make_error<Expr>( "expected identifier" );
+      return make_error<Expr>(previous().meta() +  "expected identifier" );
     }
 
     std::string name = previous().lexeme;
@@ -262,12 +262,12 @@ Result<Stmt> Parser::parse_declaration()
 Result<Stmt> Parser::parse_class_decl()
 {
   if( !match( IDENTIFIER ) )
-    return make_error<Stmt>( "Expected class name" );
+    return make_error<Stmt>( previous().meta() + "Expected class name" );
 
   std::string name = previous().lexeme;
 
   if( !match( LBRACE ) )
-    return make_error<Stmt>( "Expected '{' after class name" );
+    return make_error<Stmt>( previous().meta() + "Expected '{' after class name" );
 
   std::vector<ClassFieldDecl> fields;
 
@@ -281,15 +281,15 @@ Result<Stmt> Parser::parse_class_decl()
       std::string field_name = previous().lexeme;
 
       if( !match( COLON ) )
-        return make_error<Stmt>( "Expected ':' after field name" );
+        return make_error<Stmt>( previous().meta() + "Expected ':' after field name" );
 
       if( !match( IDENTIFIER ) )
-        return make_error<Stmt>( "Expected field name identifier" );
+        return make_error<Stmt>( previous().meta() + "Expected field name identifier" );
 
       std::string field_type = previous().lexeme;
 
       if( !match( SEMICOLON ) )
-        return make_error<Stmt>( "Expected ';' after field declaration" );
+        return make_error<Stmt>( previous().meta() + "Expected ';' after field declaration" );
 
       fields.push_back( { field_name, field_type } );
     }
@@ -310,7 +310,7 @@ Result<Stmt> Parser::parse_block()
     auto stmt = parse_declaration();
 
     if( !stmt.ok() )
-      return make_error<Stmt>( stmt.error );
+      return make_error<Stmt>( previous().meta() + stmt.error );
 
     block->stmts.push_back( stmt.node );
   } while( !is_finished() );
@@ -323,10 +323,10 @@ Result<Stmt> Parser::parse_expr_stmt()
   auto expr = parse_expression();
 
   if( !expr.ok() )
-    return make_error<Stmt>( expr.error );
+    return make_error<Stmt>( previous().meta() + expr.error );
 
   if( !match( SEMICOLON ) )
-    return make_error<Stmt>( "Expected ';' after expression" );
+    return make_error<Stmt>( previous().meta() + "Expected ';' after expression" );
 
   return make_result<Stmt>( m_gc.alloc<ExprStmt>( expr.node ) );
 }
@@ -334,18 +334,18 @@ Result<Stmt> Parser::parse_expr_stmt()
 Result<Stmt> Parser::parse_while()
 {
   if( !match( LPAREN ) )
-    return make_error<Stmt>( "expected '('" );
+    return make_error<Stmt>( previous().meta() + "expected '('" );
 
   auto cond = parse_expression();
   if( !cond.ok() )
-    return make_error<Stmt>( cond.error );
+    return make_error<Stmt>( previous().meta() + cond.error );
 
   if( !match( RPAREN ) )
-    return make_error<Stmt>( "expected ')'" );
+    return make_error<Stmt>( previous().meta() + "expected ')'" );
 
   auto body = parse_declaration();
   if( !body.ok() )
-    return make_error<Stmt>( body.error );
+    return make_error<Stmt>( previous().meta() + body.error );
 
   WhileStmt * stmt = m_gc.alloc<WhileStmt>( cond.node, body.node );
   return make_result<Stmt>( stmt );
@@ -354,21 +354,21 @@ Result<Stmt> Parser::parse_while()
 Result<Stmt> Parser::parse_if()
 {
   if( !match( LPAREN ) )
-    return make_error<Stmt>( "expected '('" );
+    return make_error<Stmt>( previous().meta() + "expected '('" );
 
   auto cond = parse_expression();
   if( !cond.ok() )
-    return make_error<Stmt>( cond.error );
+    return make_error<Stmt>( previous().meta() + cond.error );
 
   if( !match( RPAREN ) )
-    return make_error<Stmt>( "expected ')'" );
+    return make_error<Stmt>( previous().meta() + "expected ')'" );
 
   Stmt * a = nullptr;
   Stmt * b = nullptr;
 
   auto then_branch = parse_declaration();
   if( !then_branch.ok() )
-    return make_error<Stmt>( then_branch.error );
+    return make_error<Stmt>( previous().meta() + then_branch.error );
 
   a = then_branch.node;
 
@@ -376,7 +376,7 @@ Result<Stmt> Parser::parse_if()
   {
     auto else_branch = parse_declaration();
     if( !else_branch.ok() )
-      return make_error<Stmt>( else_branch.error );
+      return make_error<Stmt>( previous().meta() + else_branch.error );
 
     b = else_branch.node;
   }
@@ -412,7 +412,7 @@ Result<Expr> Parser::parse_primary()
   }
   else
   {
-    return make_error<Expr>( "Not Implemented" );
+    return make_error<Expr>(previous().meta() +  "Not Implemented" );
   }
 }
 
@@ -425,7 +425,7 @@ Result<Expr> Parser::parse_unary()
 
     auto right     = parse_unary();
     if( !right.ok() )
-      return make_error<Expr>( right.error );
+      return make_error<Expr>(previous().meta() +  right.error );
 
     return make_result<Expr>( right.node );
   }
@@ -438,7 +438,7 @@ Result<Expr> Parser::parse_term()
 {
   auto res_expr = parse_factor();
   if( !res_expr.ok() )
-    return make_error<Expr>( res_expr.error );
+    return make_error<Expr>(previous().meta() +  res_expr.error );
 
   Expr * expr = res_expr.node;
 
@@ -448,7 +448,7 @@ Result<Expr> Parser::parse_term()
 
     auto right = parse_factor();
     if( !right.ok() )
-      return make_error<Expr>( right.error );
+      return make_error<Expr>(previous().meta() +  right.error );
 
     expr = m_gc.alloc<Binary>( op, expr, right.node );
   }
@@ -460,7 +460,7 @@ Result<Expr> Parser::parse_factor()
 {
   auto res_expr = parse_unary();
   if( !res_expr.ok() )
-    return make_error<Expr>( res_expr.error );
+    return make_error<Expr>(previous().meta() +  res_expr.error );
 
   Expr * expr = res_expr.node;
 
@@ -470,7 +470,7 @@ Result<Expr> Parser::parse_factor()
 
     auto right = parse_unary();
     if( !right.ok() )
-      return make_error<Expr>( right.error );
+      return make_error<Expr>(previous().meta() +  right.error );
 
     expr = m_gc.alloc<Binary>( op, expr, right.node );
   }

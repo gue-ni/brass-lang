@@ -45,6 +45,7 @@ struct Token
 {
   const TokenType type;
   const std::string lexeme;
+  FLOC floc;
 
   Token( TokenType tt, const std::string & lx )
       : type( tt )
@@ -59,6 +60,7 @@ struct Token
   }
 
   std::string to_string() const;
+  std::string meta() const;
 };
 
 class Lexer
@@ -71,6 +73,7 @@ private:
   const std::string m_source;
   std::string::const_iterator m_pos;
   std::vector<Token> m_tokens;
+  FLOC m_floc;
 
   void run();
   void push_token( const Token & token );

@@ -9,6 +9,11 @@ std::string Token::to_string() const
   return "TOKEN(" + std::to_string( type ) + " '" + lexeme + "')";
 }
 
+std::string Token::meta() const
+{
+  return "[Ln: " + std::to_string( floc.ln ) + ", Col: " + std::to_string( floc.col ) + "] ";
+}
+
 Lexer::Lexer( const std::string & src )
     : m_source( src )
     , m_pos( m_source.begin() )
@@ -47,7 +52,17 @@ char Lexer::next()
 {
   if( is_finished() )
     return '\0';
-  return *( m_pos++ );
+  char c = *( m_pos++ );
+  if( c == '\n' )
+  {
+    m_floc.col = 0;
+    m_floc.ln++;
+  }
+  else
+  {
+    m_floc.col++;
+  }
+  return c;
 }
 
 char Lexer::peek() const
@@ -84,7 +99,9 @@ bool Lexer::match_next( char c )
 
 void Lexer::push_token( const Token & token )
 {
-  m_tokens.push_back( token );
+  Token tkn = token;
+  tkn.floc  = m_floc;
+  m_tokens.push_back( tkn );
 }
 
 bool Lexer::is_identifier( char c )
