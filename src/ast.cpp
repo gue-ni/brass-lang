@@ -48,7 +48,7 @@ void Program::compile( Compiler & compiler )
 
 bool Program::check_types( TypeContext & ctx )
 {
-  ctx.push_scope();
+  //ctx.push_scope();
   for( Stmt * stmt : stmts )
   {
     if( !stmt->declare_global( ctx ) )
@@ -64,7 +64,7 @@ bool Program::check_types( TypeContext & ctx )
       return false;
     }
   }
-  ctx.pop_scope();
+  //ctx.pop_scope();
   return true;
 }
 
@@ -322,7 +322,7 @@ TypeInfo * Call::infer_types( TypeContext & ctx )
   TypeInfo * fn_type = callee->infer_types( ctx );
   if( !fn_type )
   {
-    ctx.throw_type_error( "Undeclared function type" );
+    ctx.throw_type_error( "Undeclared function type " );
     return nullptr;
   }
 
@@ -595,6 +595,8 @@ bool ExprStmt::check_types( TypeContext & ctx )
 
 TypeContext::TypeContext()
 {
+  m_scopes.push_back({});
+
   // builtin types
   ( void ) define_type( "int" );
   ( void ) define_type( "bool" );

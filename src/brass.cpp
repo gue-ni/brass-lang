@@ -47,6 +47,7 @@ std::string repl_header()
 
 int repl()
 {
+  TypeContext ctx;
   GarbageCollector gc;
   NodeAllocator allocator;
 
@@ -87,7 +88,6 @@ int repl()
       continue;
     }
 
-    TypeContext ctx;
     ast.node->check_types( ctx );
     if( !ctx.ok() )
     {

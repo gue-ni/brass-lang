@@ -14,6 +14,11 @@ public:
   {
   }
 
+  virtual void mark()
+  {
+    m_marked = true;
+  }
+
 protected:
   bool m_marked;
 };
@@ -35,7 +40,7 @@ public:
 
   ~GarbageCollector()
   {
-    for (GarbageCollected* gc_obj : m_heap)
+    for( GarbageCollected * gc_obj : m_heap )
     {
       delete gc_obj;
     }
