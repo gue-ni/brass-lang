@@ -2,17 +2,16 @@
 #include "ast.h"
 #include <iostream>
 
-Parser::Parser( const std::vector<Token> & tokens, NodeAllocator & arena, GarbageCollector & gc )
+Parser::Parser( const std::vector<Token> & tokens, GarbageCollector & gc )
     : m_tokens( tokens )
     , m_pos( m_tokens.begin() )
-    , m_arena( arena )
     , m_gc( gc )
 {
 }
 
 Result<Program> Parser::run()
 {
-  Program * prog = m_arena.alloc<Program>();
+  Program * prog = m_gc.alloc<Program>();
 
   do
   {
@@ -41,7 +40,7 @@ Result<Stmt> Parser::parse_statement()
     if( !match( SEMICOLON ) )
       return make_error<Stmt>( "Expected ';' after 'print' statement" );
 
-    return make_result<Stmt>( m_arena.alloc<Print>( expr.node, newline ) );
+    return make_result<Stmt>( m_gc.alloc<Print>( expr.node, newline ) );
   }
   else if( match( KW_RETURN ) )
   {
@@ -52,7 +51,7 @@ Result<Stmt> Parser::parse_statement()
     if( !match( SEMICOLON ) )
       return make_error<Stmt>( "Expected ';' after 'return' statement" );
 
-    return make_result<Stmt>( m_arena.alloc<Return>( expr.node ) );
+    return make_result<Stmt>( m_gc.alloc<Return>( expr.node ) );
   }
   else if( match( KW_IF ) )
   {
@@ -127,7 +126,7 @@ Result<Stmt> Parser::parse_fn_decl()
   if( !body.ok() )
     return make_error<Stmt>( body.error );
 
-  return make_result<Stmt>( m_arena.alloc<FnDecl>( fn_name, args, return_type, body.node ) );
+  return make_result<Stmt>( m_gc.alloc<FnDecl>( fn_name, args, return_type, body.node ) );
 }
 
 Result<Stmt> Parser::parse_var_decl()
@@ -156,7 +155,7 @@ Result<Stmt> Parser::parse_var_decl()
   if( !match( SEMICOLON ) )
     return make_error<Stmt>( "Expected ';' after variable declaration" );
 
-  return make_result<Stmt>( m_arena.alloc<VariableDecl>( var_name, type_name, expr.node ) );
+  return make_result<Stmt>( m_gc.alloc<VariableDecl>( var_name, type_name, expr.node ) );
 }
 
 Result<Expr> Parser::parse_assignment()
@@ -172,12 +171,12 @@ Result<Expr> Parser::parse_assignment()
     if( dynamic_cast<Variable *>( expr.node ) )
     {
       Variable * var = ( Variable * ) expr.node;
-      return make_result<Expr>( m_arena.alloc<Assignment>( var->name, value.node ) );
+      return make_result<Expr>( m_gc.alloc<Assignment>( var->name, value.node ) );
     }
     else if( dynamic_cast<Get *>( expr.node ) != nullptr )
     {
       Get * get = ( Get * ) expr.node;
-      return make_result<Expr>( m_arena.alloc<Set>( get->object, get->property, value.node ) );
+      return make_result<Expr>( m_gc.alloc<Set>( get->object, get->property, value.node ) );
     }
 
     return make_error<Expr>( "assigment not impelmented" );
@@ -220,7 +219,7 @@ Result<Expr> Parser::parse_call()
       return make_error<Expr>( "Expected ')'" );
     }
 
-    Call * fn_call = m_arena.alloc<Call>( expr.node, args );
+    Call * fn_call = m_gc.alloc<Call>( expr.node, args );
     return make_result<Expr>( fn_call );
   }
   else if( match( DOT ) )
@@ -231,7 +230,7 @@ Result<Expr> Parser::parse_call()
     }
 
     std::string name = previous().lexeme;
-    Get * get        = m_arena.alloc<Get>( expr.node, name );
+    Get * get        = m_gc.alloc<Get>( expr.node, name );
     return make_result<Expr>( get );
   }
   else
@@ -297,12 +296,12 @@ Result<Stmt> Parser::parse_class_decl()
 
   } while( !is_finished() );
 
-  return make_result<Stmt>( m_arena.alloc<ClassDecl>( name.c_str(), fields ) );
+  return make_result<Stmt>( m_gc.alloc<ClassDecl>( name.c_str(), fields ) );
 }
 
 Result<Stmt> Parser::parse_block()
 {
-  Block * block = m_arena.alloc<Block>();
+  Block * block = m_gc.alloc<Block>();
   do
   {
     if( match( RBRACE ) )
@@ -329,7 +328,7 @@ Result<Stmt> Parser::parse_expr_stmt()
   if( !match( SEMICOLON ) )
     return make_error<Stmt>( "Expected ';' after expression" );
 
-  return make_result<Stmt>( m_arena.alloc<ExprStmt>( expr.node ) );
+  return make_result<Stmt>( m_gc.alloc<ExprStmt>( expr.node ) );
 }
 
 Result<Stmt> Parser::parse_while()
@@ -348,7 +347,7 @@ Result<Stmt> Parser::parse_while()
   if( !body.ok() )
     return make_error<Stmt>( body.error );
 
-  WhileStmt * stmt = m_arena.alloc<WhileStmt>( cond.node, body.node );
+  WhileStmt * stmt = m_gc.alloc<WhileStmt>( cond.node, body.node );
   return make_result<Stmt>( stmt );
 }
 
@@ -382,7 +381,7 @@ Result<Stmt> Parser::parse_if()
     b = else_branch.node;
   }
 
-  IfStmt * if_stmt = m_arena.alloc<IfStmt>( cond.node, a, b );
+  IfStmt * if_stmt = m_gc.alloc<IfStmt>( cond.node, a, b );
   return make_result<Stmt>( if_stmt );
 }
 
@@ -396,19 +395,19 @@ Result<Expr> Parser::parse_primary()
   if( match( NUMBER ) )
   {
     int value         = std::stoi( previous().lexeme );
-    Literal * literal = m_arena.alloc<Literal>( Object::Integer( value ) );
+    Literal * literal = m_gc.alloc<Literal>( Object::Integer( value ) );
     return make_result<Expr>( literal );
   }
   else if( match( STRING ) )
   {
     std::string str        = previous().lexeme;
     StringObject * str_obj = m_gc.alloc<StringObject>( str.c_str() );
-    Literal * literal      = m_arena.alloc<Literal>( Object::String( str_obj ) );
+    Literal * literal      = m_gc.alloc<Literal>( Object::String( str_obj ) );
     return make_result<Expr>( literal );
   }
   else if( match( IDENTIFIER ) )
   {
-    Variable * var = m_arena.alloc<Variable>( previous().lexeme );
+    Variable * var = m_gc.alloc<Variable>( previous().lexeme );
     return make_result<Expr>( var );
   }
   else
@@ -451,7 +450,7 @@ Result<Expr> Parser::parse_term()
     if( !right.ok() )
       return make_error<Expr>( right.error );
 
-    expr = m_arena.alloc<Binary>( op, expr, right.node );
+    expr = m_gc.alloc<Binary>( op, expr, right.node );
   }
 
   return make_result( expr );
@@ -473,7 +472,7 @@ Result<Expr> Parser::parse_factor()
     if( !right.ok() )
       return make_error<Expr>( right.error );
 
-    expr = m_arena.alloc<Binary>( op, expr, right.node );
+    expr = m_gc.alloc<Binary>( op, expr, right.node );
   }
 
   return make_result( expr );
@@ -512,8 +511,8 @@ bool Parser::is_finished()
   return m_pos == m_tokens.end();
 }
 
-Result<Program> parse( const std::vector<Token> & tokens, NodeAllocator & allocator, GarbageCollector & gc )
+Result<Program> parse( const std::vector<Token> & tokens, GarbageCollector & gc )
 {
-  Parser parser( tokens, allocator, gc );
+  Parser parser( tokens, gc );
   return parser.run();
 }

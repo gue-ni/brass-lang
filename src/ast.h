@@ -57,7 +57,7 @@ private:
   std::list<std::map<std::string, TypeInfo *>> m_scopes;
 };
 
-struct AstNode
+struct AstNode : public GarbageCollected
 {
   virtual ~AstNode()
   {

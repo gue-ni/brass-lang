@@ -13,9 +13,8 @@ int eval( const char * src, std::ostream & out, std::ostream & err )
   std::vector<Token> tokens = lex( src );
 
   GarbageCollector gc;
-  NodeAllocator allocator;
 
-  Result<Program> result = parse( tokens, allocator, gc );
+  Result<Program> result = parse( tokens, gc );
   if( !result.ok() )
   {
     err << "PARSER ERROR: " << result.error << std::endl;
@@ -49,7 +48,6 @@ int repl()
 {
   TypeContext ctx;
   GarbageCollector gc;
-  NodeAllocator allocator;
 
   VirtualMachine vm( std::cout, std::cerr, gc );
 
@@ -81,7 +79,7 @@ int repl()
       continue;
     }
 
-    auto ast = parse( tokens, allocator, gc );
+    auto ast = parse( tokens, gc );
     if( !ast.ok() )
     {
       std::cerr << ast.error << std::endl;
