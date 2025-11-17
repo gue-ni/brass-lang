@@ -48,6 +48,7 @@ public:
   }
 
   std::string error;
+  TypeInfo * expected_return_type = nullptr;
 
 private:
   // mapping of type names to TypeInfo*

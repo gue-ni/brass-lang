@@ -48,7 +48,7 @@ void Program::compile( Compiler & compiler )
 
 bool Program::check_types( TypeContext & ctx )
 {
-  //ctx.push_scope();
+  // ctx.push_scope();
   for( Stmt * stmt : stmts )
   {
     if( !stmt->declare_global( ctx ) )
@@ -64,7 +64,7 @@ bool Program::check_types( TypeContext & ctx )
       return false;
     }
   }
-  //ctx.pop_scope();
+  // ctx.pop_scope();
   return true;
 }
 
@@ -259,7 +259,19 @@ bool FnDecl::declare_global( TypeContext & ctx )
 
 bool FnDecl::check_types( TypeContext & ctx )
 {
-  return true;
+  TypeInfo * fn_type       = ctx.lookup_var( name );
+  ctx.expected_return_type = fn_type->return_type;
+
+  for( const auto & arg : args )
+  {
+    TypeInfo * arg_type = ctx.lookup_type( arg.type );
+    assert( arg_type );
+    ( void ) ctx.define_var( arg.name, arg_type );
+  }
+
+  bool r                   = body->check_types( ctx );
+  ctx.expected_return_type = nullptr;
+  return r;
 }
 
 Return::Return( Expr * expr )
@@ -275,9 +287,18 @@ void Return::compile( Compiler & compiler )
 
 bool Return::check_types( TypeContext & ctx )
 {
-  // TODO: check if type matches function return value
   TypeInfo * ti = expr->infer_types( ctx );
-  return ti != nullptr;
+  assert( ti );
+  if( ti != ctx.expected_return_type )
+  {
+    ctx.throw_type_error(
+        "Unexpected return type, expected '" + ctx.expected_return_type->name + "', but got '" + ti->name + "'" );
+    return false;
+  }
+  else
+  {
+    return true;
+  }
 }
 
 Variable::Variable( const std::string & name )
@@ -358,7 +379,14 @@ void Block::compile( Compiler & compiler )
 
 bool Block::check_types( TypeContext & ctx )
 {
-  return false;
+  for( Stmt * stmt : stmts )
+  {
+    if( !stmt->check_types( ctx ) )
+    {
+      return false;
+    }
+  }
+  return true;
 }
 
 VariableDecl::VariableDecl( const std::string & var_name, const std::string & type_name, Expr * expr )
@@ -380,13 +408,16 @@ bool VariableDecl::check_types( TypeContext & ctx )
 {
   // TODO: check if the variable was declard before this should throw an error
   TypeInfo * a = ctx.lookup_var( var_name ); // TODO: should also return whether it is global
-  if( a->declard )
+  if( a )
   {
-    ctx.throw_type_error( "was already declared" );
-  }
-  else
-  {
-    a->declard = true;
+    if( a->declard )
+    {
+      ctx.throw_type_error( "was already declared" );
+    }
+    else
+    {
+      a->declard = true;
+    }
   }
 
   TypeInfo * decl_type = nullptr;
@@ -396,6 +427,7 @@ bool VariableDecl::check_types( TypeContext & ctx )
   }
 
   TypeInfo * infered_type = expr->infer_types( ctx );
+  assert( infered_type );
 
   if( decl_type && decl_type != infered_type )
   {
@@ -527,7 +559,8 @@ void Get::compile( Compiler & compiler )
 TypeInfo * Get::infer_types( TypeContext & ctx )
 {
   TypeInfo * a = object->infer_types( ctx );
-  auto it      = a->field_types.find( property );
+  assert( a );
+  auto it = a->field_types.find( property );
   if( it != a->field_types.end() )
   {
     return it->second;
@@ -555,7 +588,6 @@ void Set::compile( Compiler & compiler )
 
 TypeInfo * Set::infer_types( TypeContext & ctx )
 {
-
   TypeInfo * a = object->infer_types( ctx );
   TypeInfo * b = value->infer_types( ctx );
 
@@ -595,7 +627,7 @@ bool ExprStmt::check_types( TypeContext & ctx )
 
 TypeContext::TypeContext()
 {
-  m_scopes.push_back({});
+  m_scopes.push_back( {} );
 
   // builtin types
   ( void ) define_type( "int" );

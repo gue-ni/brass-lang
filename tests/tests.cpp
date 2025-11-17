@@ -517,3 +517,19 @@ var x: string = add(2, 3);
   EXPECT_EQ( out.str(), "" );
   EXPECT_EQ( err.str(), "TYPE ERROR: Declared type does not match infered type\n" );
 }
+
+TEST_F( Unittest, test_types_08 )
+{
+  const char * src = R"(
+fn foo() : int {
+  return "bar";
+}
+
+print foo();
+  )";
+
+  ( void ) eval( src, out, err );
+
+  EXPECT_EQ( out.str(), "" );
+  EXPECT_EQ( err.str(), "TYPE ERROR: Unexpected return type, expected 'int', but got 'string'\n" );
+}
